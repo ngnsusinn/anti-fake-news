@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Anti Fake News",
+  "version": "0.1.0",
+  "minimum_chrome_version": "102",
+  "description": "Mở phiên phân tích và trích nội dung từ tab đang xem.",
+  "action": {
+    "default_title": "Phân tích bài viết"
+  },
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ]
+}
