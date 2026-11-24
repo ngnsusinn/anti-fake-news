@@ -1,0 +1,990 @@
+[
+  {
+    "sample_id": "gossipcop-1020335052",
+    "group_id": "group_0001"
+  },
+  {
+    "sample_id": "gossipcop-1032664975",
+    "group_id": "group_0003"
+  },
+  {
+    "sample_id": "gossipcop-1225099614",
+    "group_id": "group_0004"
+  },
+  {
+    "sample_id": "gossipcop-1606507932",
+    "group_id": "group_0006"
+  },
+  {
+    "sample_id": "gossipcop-2076682877",
+    "group_id": "group_0008"
+  },
+  {
+    "sample_id": "gossipcop-2182023698",
+    "group_id": "group_0009"
+  },
+  {
+    "sample_id": "gossipcop-2210288941",
+    "group_id": "group_0010"
+  },
+  {
+    "sample_id": "gossipcop-22281334",
+    "group_id": "group_0011"
+  },
+  {
+    "sample_id": "gossipcop-2279820101",
+    "group_id": "group_0012"
+  },
+  {
+    "sample_id": "gossipcop-2345398796",
+    "group_id": "group_0013"
+  },
+  {
+    "sample_id": "gossipcop-2485085069",
+    "group_id": "group_0016"
+  },
+  {
+    "sample_id": "gossipcop-2552051738",
+    "group_id": "group_0018"
+  },
+  {
+    "sample_id": "gossipcop-2803748870",
+    "group_id": "group_0019"
+  },
+  {
+    "sample_id": "gossipcop-2875496174",
+    "group_id": "group_0020"
+  },
+  {
+    "sample_id": "gossipcop-3084428038",
+    "group_id": "group_0022"
+  },
+  {
+    "sample_id": "gossipcop-324494433",
+    "group_id": "group_0025"
+  },
+  {
+    "sample_id": "gossipcop-3448636303",
+    "group_id": "group_0026"
+  },
+  {
+    "sample_id": "gossipcop-3449648617",
+    "group_id": "group_0027"
+  },
+  {
+    "sample_id": "gossipcop-3503563094",
+    "group_id": "group_0028"
+  },
+  {
+    "sample_id": "gossipcop-3795940197",
+    "group_id": "group_0029"
+  },
+  {
+    "sample_id": "gossipcop-3896029098",
+    "group_id": "group_0030"
+  },
+  {
+    "sample_id": "gossipcop-392859545",
+    "group_id": "group_0031"
+  },
+  {
+    "sample_id": "gossipcop-4209182367",
+    "group_id": "group_0034"
+  },
+  {
+    "sample_id": "gossipcop-4258497840",
+    "group_id": "group_0035"
+  },
+  {
+    "sample_id": "gossipcop-4308581568",
+    "group_id": "group_0036"
+  },
+  {
+    "sample_id": "gossipcop-4492802133",
+    "group_id": "group_0039"
+  },
+  {
+    "sample_id": "gossipcop-4924282374",
+    "group_id": "group_0040"
+  },
+  {
+    "sample_id": "gossipcop-5009074529",
+    "group_id": "group_0042"
+  },
+  {
+    "sample_id": "gossipcop-5035404255",
+    "group_id": "group_0043"
+  },
+  {
+    "sample_id": "gossipcop-5051410001",
+    "group_id": "group_0044"
+  },
+  {
+    "sample_id": "gossipcop-5061123187",
+    "group_id": "group_0045"
+  },
+  {
+    "sample_id": "gossipcop-5328443100",
+    "group_id": "group_0048"
+  },
+  {
+    "sample_id": "gossipcop-5476631226",
+    "group_id": "group_0049"
+  },
+  {
+    "sample_id": "gossipcop-5663483713",
+    "group_id": "group_0051"
+  },
+  {
+    "sample_id": "gossipcop-5671352259",
+    "group_id": "group_0052"
+  },
+  {
+    "sample_id": "gossipcop-6010530745",
+    "group_id": "group_0053"
+  },
+  {
+    "sample_id": "gossipcop-6068765070",
+    "group_id": "group_0054"
+  },
+  {
+    "sample_id": "gossipcop-610873029",
+    "group_id": "group_0055"
+  },
+  {
+    "sample_id": "gossipcop-6183599706",
+    "group_id": "group_0056"
+  },
+  {
+    "sample_id": "gossipcop-6504249629",
+    "group_id": "group_0057"
+  },
+  {
+    "sample_id": "gossipcop-6747642549",
+    "group_id": "group_0058"
+  },
+  {
+    "sample_id": "gossipcop-6751025589",
+    "group_id": "group_0059"
+  },
+  {
+    "sample_id": "gossipcop-7010349230",
+    "group_id": "group_0062"
+  },
+  {
+    "sample_id": "gossipcop-7105802899",
+    "group_id": "group_0063"
+  },
+  {
+    "sample_id": "gossipcop-7147482030",
+    "group_id": "group_0064"
+  },
+  {
+    "sample_id": "gossipcop-7894516039",
+    "group_id": "group_0067"
+  },
+  {
+    "sample_id": "gossipcop-8105333868",
+    "group_id": "group_0068"
+  },
+  {
+    "sample_id": "gossipcop-8192653419",
+    "group_id": "group_0071"
+  },
+  {
+    "sample_id": "gossipcop-829660617",
+    "group_id": "group_0072"
+  },
+  {
+    "sample_id": "gossipcop-8347611424",
+    "group_id": "group_0073"
+  },
+  {
+    "sample_id": "gossipcop-845913",
+    "group_id": "group_0074"
+  },
+  {
+    "sample_id": "gossipcop-846137",
+    "group_id": "group_0075"
+  },
+  {
+    "sample_id": "gossipcop-848179",
+    "group_id": "group_0077"
+  },
+  {
+    "sample_id": "gossipcop-848402",
+    "group_id": "group_0078"
+  },
+  {
+    "sample_id": "gossipcop-850409",
+    "group_id": "group_0079"
+  },
+  {
+    "sample_id": "gossipcop-850436",
+    "group_id": "group_0080"
+  },
+  {
+    "sample_id": "gossipcop-850948",
+    "group_id": "group_0081"
+  },
+  {
+    "sample_id": "gossipcop-855860",
+    "group_id": "group_0082"
+  },
+  {
+    "sample_id": "gossipcop-857434",
+    "group_id": "group_0085"
+  },
+  {
+    "sample_id": "gossipcop-860726",
+    "group_id": "group_0086"
+  },
+  {
+    "sample_id": "gossipcop-8611166284",
+    "group_id": "group_0088"
+  },
+  {
+    "sample_id": "gossipcop-863169",
+    "group_id": "group_0089"
+  },
+  {
+    "sample_id": "gossipcop-863614",
+    "group_id": "group_0090"
+  },
+  {
+    "sample_id": "gossipcop-864237",
+    "group_id": "group_0091"
+  },
+  {
+    "sample_id": "gossipcop-864634",
+    "group_id": "group_0092"
+  },
+  {
+    "sample_id": "gossipcop-867108",
+    "group_id": "group_0094"
+  },
+  {
+    "sample_id": "gossipcop-868602",
+    "group_id": "group_0095"
+  },
+  {
+    "sample_id": "gossipcop-870571",
+    "group_id": "group_0097"
+  },
+  {
+    "sample_id": "gossipcop-872759",
+    "group_id": "group_0098"
+  },
+  {
+    "sample_id": "gossipcop-8753274298",
+    "group_id": "group_0102"
+  },
+  {
+    "sample_id": "gossipcop-875924",
+    "group_id": "group_0103"
+  },
+  {
+    "sample_id": "gossipcop-878391",
+    "group_id": "group_0105"
+  },
+  {
+    "sample_id": "gossipcop-881302",
+    "group_id": "group_0106"
+  },
+  {
+    "sample_id": "gossipcop-881554",
+    "group_id": "group_0107"
+  },
+  {
+    "sample_id": "gossipcop-882656",
+    "group_id": "group_0109"
+  },
+  {
+    "sample_id": "gossipcop-884026",
+    "group_id": "group_0110"
+  },
+  {
+    "sample_id": "gossipcop-884442",
+    "group_id": "group_0111"
+  },
+  {
+    "sample_id": "gossipcop-884684",
+    "group_id": "group_0112"
+  },
+  {
+    "sample_id": "gossipcop-8871505752",
+    "group_id": "group_0113"
+  },
+  {
+    "sample_id": "gossipcop-8877042466",
+    "group_id": "group_0115"
+  },
+  {
+    "sample_id": "gossipcop-889739",
+    "group_id": "group_0116"
+  },
+  {
+    "sample_id": "gossipcop-890284",
+    "group_id": "group_0119"
+  },
+  {
+    "sample_id": "gossipcop-890423",
+    "group_id": "group_0120"
+  },
+  {
+    "sample_id": "gossipcop-896255",
+    "group_id": "group_0123"
+  },
+  {
+    "sample_id": "gossipcop-896517",
+    "group_id": "group_0124"
+  },
+  {
+    "sample_id": "gossipcop-896961",
+    "group_id": "group_0125"
+  },
+  {
+    "sample_id": "gossipcop-897431",
+    "group_id": "group_0126"
+  },
+  {
+    "sample_id": "gossipcop-897603",
+    "group_id": "group_0127"
+  },
+  {
+    "sample_id": "gossipcop-898585",
+    "group_id": "group_0128"
+  },
+  {
+    "sample_id": "gossipcop-899337",
+    "group_id": "group_0129"
+  },
+  {
+    "sample_id": "gossipcop-8996311550",
+    "group_id": "group_0130"
+  },
+  {
+    "sample_id": "gossipcop-900065",
+    "group_id": "group_0132"
+  },
+  {
+    "sample_id": "gossipcop-901312",
+    "group_id": "group_0133"
+  },
+  {
+    "sample_id": "gossipcop-905887",
+    "group_id": "group_0134"
+  },
+  {
+    "sample_id": "gossipcop-9067502868",
+    "group_id": "group_0135"
+  },
+  {
+    "sample_id": "gossipcop-907647",
+    "group_id": "group_0138"
+  },
+  {
+    "sample_id": "gossipcop-907816",
+    "group_id": "group_0139"
+  },
+  {
+    "sample_id": "gossipcop-908089",
+    "group_id": "group_0140"
+  },
+  {
+    "sample_id": "gossipcop-908254",
+    "group_id": "group_0141"
+  },
+  {
+    "sample_id": "gossipcop-908402",
+    "group_id": "group_0142"
+  },
+  {
+    "sample_id": "gossipcop-9093067371",
+    "group_id": "group_0144"
+  },
+  {
+    "sample_id": "gossipcop-9098202484",
+    "group_id": "group_0145"
+  },
+  {
+    "sample_id": "gossipcop-912950",
+    "group_id": "group_0146"
+  },
+  {
+    "sample_id": "gossipcop-914742",
+    "group_id": "group_0147"
+  },
+  {
+    "sample_id": "gossipcop-915349",
+    "group_id": "group_0148"
+  },
+  {
+    "sample_id": "gossipcop-917421",
+    "group_id": "group_0149"
+  },
+  {
+    "sample_id": "gossipcop-918831",
+    "group_id": "group_0150"
+  },
+  {
+    "sample_id": "gossipcop-921146",
+    "group_id": "group_0152"
+  },
+  {
+    "sample_id": "gossipcop-923759",
+    "group_id": "group_0154"
+  },
+  {
+    "sample_id": "gossipcop-924603",
+    "group_id": "group_0155"
+  },
+  {
+    "sample_id": "gossipcop-930203",
+    "group_id": "group_0158"
+  },
+  {
+    "sample_id": "gossipcop-930658",
+    "group_id": "group_0159"
+  },
+  {
+    "sample_id": "gossipcop-930832",
+    "group_id": "group_0160"
+  },
+  {
+    "sample_id": "gossipcop-931132",
+    "group_id": "group_0161"
+  },
+  {
+    "sample_id": "gossipcop-931325",
+    "group_id": "group_0162"
+  },
+  {
+    "sample_id": "gossipcop-933029",
+    "group_id": "group_0163"
+  },
+  {
+    "sample_id": "gossipcop-935087",
+    "group_id": "group_0164"
+  },
+  {
+    "sample_id": "gossipcop-9368279509",
+    "group_id": "group_0166"
+  },
+  {
+    "sample_id": "gossipcop-939148",
+    "group_id": "group_0168"
+  },
+  {
+    "sample_id": "gossipcop-939721",
+    "group_id": "group_0169"
+  },
+  {
+    "sample_id": "gossipcop-941294",
+    "group_id": "group_0171"
+  },
+  {
+    "sample_id": "gossipcop-941805037",
+    "group_id": "group_0172"
+  },
+  {
+    "sample_id": "gossipcop-9444654745",
+    "group_id": "group_0174"
+  },
+  {
+    "sample_id": "gossipcop-949910",
+    "group_id": "group_0177"
+  },
+  {
+    "sample_id": "gossipcop-9503284683",
+    "group_id": "group_0178"
+  },
+  {
+    "sample_id": "gossipcop-950782",
+    "group_id": "group_0180"
+  },
+  {
+    "sample_id": "gossipcop-9521617242",
+    "group_id": "group_0181"
+  },
+  {
+    "sample_id": "gossipcop-952953",
+    "group_id": "group_0182"
+  },
+  {
+    "sample_id": "gossipcop-953107",
+    "group_id": "group_0183"
+  },
+  {
+    "sample_id": "gossipcop-955009",
+    "group_id": "group_0184"
+  },
+  {
+    "sample_id": "gossipcop-9636141965",
+    "group_id": "group_0185"
+  },
+  {
+    "sample_id": "gossipcop-9752823264",
+    "group_id": "group_0188"
+  },
+  {
+    "sample_id": "gossipcop-9878194459",
+    "group_id": "group_0190"
+  },
+  {
+    "sample_id": "gossipcop-988336091",
+    "group_id": "group_0191"
+  },
+  {
+    "sample_id": "gossipcop-9940338306",
+    "group_id": "group_0192"
+  },
+  {
+    "sample_id": "politifact1084",
+    "group_id": "group_0194"
+  },
+  {
+    "sample_id": "politifact11580",
+    "group_id": "group_0195"
+  },
+  {
+    "sample_id": "politifact11747",
+    "group_id": "group_0197"
+  },
+  {
+    "sample_id": "politifact11761",
+    "group_id": "group_0198"
+  },
+  {
+    "sample_id": "politifact118",
+    "group_id": "group_0199"
+  },
+  {
+    "sample_id": "politifact11960",
+    "group_id": "group_0201"
+  },
+  {
+    "sample_id": "politifact1202",
+    "group_id": "group_0203"
+  },
+  {
+    "sample_id": "politifact12148",
+    "group_id": "group_0204"
+  },
+  {
+    "sample_id": "politifact12773",
+    "group_id": "group_0205"
+  },
+  {
+    "sample_id": "politifact13038",
+    "group_id": "group_0206"
+  },
+  {
+    "sample_id": "politifact13132",
+    "group_id": "group_0198"
+  },
+  {
+    "sample_id": "politifact13193",
+    "group_id": "group_0207"
+  },
+  {
+    "sample_id": "politifact13303",
+    "group_id": "group_0208"
+  },
+  {
+    "sample_id": "politifact13467",
+    "group_id": "group_0209"
+  },
+  {
+    "sample_id": "politifact13484",
+    "group_id": "group_0210"
+  },
+  {
+    "sample_id": "politifact13515",
+    "group_id": "group_0206"
+  },
+  {
+    "sample_id": "politifact13557",
+    "group_id": "group_0211"
+  },
+  {
+    "sample_id": "politifact13559",
+    "group_id": "group_0212"
+  },
+  {
+    "sample_id": "politifact13565",
+    "group_id": "group_0213"
+  },
+  {
+    "sample_id": "politifact13570",
+    "group_id": "group_0214"
+  },
+  {
+    "sample_id": "politifact13745",
+    "group_id": "group_0216"
+  },
+  {
+    "sample_id": "politifact13765",
+    "group_id": "group_0217"
+  },
+  {
+    "sample_id": "politifact13773",
+    "group_id": "group_0218"
+  },
+  {
+    "sample_id": "politifact13794",
+    "group_id": "group_0220"
+  },
+  {
+    "sample_id": "politifact13806",
+    "group_id": "group_0221"
+  },
+  {
+    "sample_id": "politifact13836",
+    "group_id": "group_0223"
+  },
+  {
+    "sample_id": "politifact13897",
+    "group_id": "group_0226"
+  },
+  {
+    "sample_id": "politifact13999",
+    "group_id": "group_0229"
+  },
+  {
+    "sample_id": "politifact14005",
+    "group_id": "group_0230"
+  },
+  {
+    "sample_id": "politifact14064",
+    "group_id": "group_0233"
+  },
+  {
+    "sample_id": "politifact14123",
+    "group_id": "group_0235"
+  },
+  {
+    "sample_id": "politifact14211",
+    "group_id": "group_0236"
+  },
+  {
+    "sample_id": "politifact14222",
+    "group_id": "group_0237"
+  },
+  {
+    "sample_id": "politifact14235",
+    "group_id": "group_0239"
+  },
+  {
+    "sample_id": "politifact14236",
+    "group_id": "group_0240"
+  },
+  {
+    "sample_id": "politifact14238",
+    "group_id": "group_0241"
+  },
+  {
+    "sample_id": "politifact14278",
+    "group_id": "group_0243"
+  },
+  {
+    "sample_id": "politifact14297",
+    "group_id": "group_0244"
+  },
+  {
+    "sample_id": "politifact14327",
+    "group_id": "group_0245"
+  },
+  {
+    "sample_id": "politifact14328",
+    "group_id": "group_0246"
+  },
+  {
+    "sample_id": "politifact14356",
+    "group_id": "group_0247"
+  },
+  {
+    "sample_id": "politifact14384",
+    "group_id": "group_0248"
+  },
+  {
+    "sample_id": "politifact14386",
+    "group_id": "group_0249"
+  },
+  {
+    "sample_id": "politifact14394",
+    "group_id": "group_0250"
+  },
+  {
+    "sample_id": "politifact14426",
+    "group_id": "group_0251"
+  },
+  {
+    "sample_id": "politifact14469",
+    "group_id": "group_0253"
+  },
+  {
+    "sample_id": "politifact14472",
+    "group_id": "group_0254"
+  },
+  {
+    "sample_id": "politifact14514",
+    "group_id": "group_0256"
+  },
+  {
+    "sample_id": "politifact14543",
+    "group_id": "group_0257"
+  },
+  {
+    "sample_id": "politifact14564",
+    "group_id": "group_0259"
+  },
+  {
+    "sample_id": "politifact14565",
+    "group_id": "group_0260"
+  },
+  {
+    "sample_id": "politifact14567",
+    "group_id": "group_0261"
+  },
+  {
+    "sample_id": "politifact14596",
+    "group_id": "group_0262"
+  },
+  {
+    "sample_id": "politifact14624",
+    "group_id": "group_0264"
+  },
+  {
+    "sample_id": "politifact14693",
+    "group_id": "group_0265"
+  },
+  {
+    "sample_id": "politifact14745",
+    "group_id": "group_0268"
+  },
+  {
+    "sample_id": "politifact14950",
+    "group_id": "group_0271"
+  },
+  {
+    "sample_id": "politifact14954",
+    "group_id": "group_0272"
+  },
+  {
+    "sample_id": "politifact14984",
+    "group_id": "group_0273"
+  },
+  {
+    "sample_id": "politifact15097",
+    "group_id": "group_0275"
+  },
+  {
+    "sample_id": "politifact15130",
+    "group_id": "group_0276"
+  },
+  {
+    "sample_id": "politifact15164",
+    "group_id": "group_0280"
+  },
+  {
+    "sample_id": "politifact15205",
+    "group_id": "group_0281"
+  },
+  {
+    "sample_id": "politifact15251",
+    "group_id": "group_0283"
+  },
+  {
+    "sample_id": "politifact15262",
+    "group_id": "group_0284"
+  },
+  {
+    "sample_id": "politifact15291",
+    "group_id": "group_0287"
+  },
+  {
+    "sample_id": "politifact15309",
+    "group_id": "group_0288"
+  },
+  {
+    "sample_id": "politifact15355",
+    "group_id": "group_0289"
+  },
+  {
+    "sample_id": "politifact15362",
+    "group_id": "group_0290"
+  },
+  {
+    "sample_id": "politifact15367",
+    "group_id": "group_0291"
+  },
+  {
+    "sample_id": "politifact15383",
+    "group_id": "group_0198"
+  },
+  {
+    "sample_id": "politifact15482",
+    "group_id": "group_0292"
+  },
+  {
+    "sample_id": "politifact15486",
+    "group_id": "group_0293"
+  },
+  {
+    "sample_id": "politifact15501",
+    "group_id": "group_0294"
+  },
+  {
+    "sample_id": "politifact15525",
+    "group_id": "group_0295"
+  },
+  {
+    "sample_id": "politifact15573",
+    "group_id": "group_0206"
+  },
+  {
+    "sample_id": "politifact15625",
+    "group_id": "group_0296"
+  },
+  {
+    "sample_id": "politifact1755",
+    "group_id": "group_0297"
+  },
+  {
+    "sample_id": "politifact1770",
+    "group_id": "group_0298"
+  },
+  {
+    "sample_id": "politifact1783",
+    "group_id": "group_0299"
+  },
+  {
+    "sample_id": "politifact1825",
+    "group_id": "group_0300"
+  },
+  {
+    "sample_id": "politifact20",
+    "group_id": "group_0301"
+  },
+  {
+    "sample_id": "politifact2019",
+    "group_id": "group_0206"
+  },
+  {
+    "sample_id": "politifact206",
+    "group_id": "group_0303"
+  },
+  {
+    "sample_id": "politifact2093",
+    "group_id": "group_0304"
+  },
+  {
+    "sample_id": "politifact2166",
+    "group_id": "group_0305"
+  },
+  {
+    "sample_id": "politifact2298",
+    "group_id": "group_0306"
+  },
+  {
+    "sample_id": "politifact246",
+    "group_id": "group_0307"
+  },
+  {
+    "sample_id": "politifact333",
+    "group_id": "group_0309"
+  },
+  {
+    "sample_id": "politifact3335",
+    "group_id": "group_0310"
+  },
+  {
+    "sample_id": "politifact374",
+    "group_id": "group_0313"
+  },
+  {
+    "sample_id": "politifact384",
+    "group_id": "group_0314"
+  },
+  {
+    "sample_id": "politifact3892",
+    "group_id": "group_0315"
+  },
+  {
+    "sample_id": "politifact401",
+    "group_id": "group_0316"
+  },
+  {
+    "sample_id": "politifact4181",
+    "group_id": "group_0317"
+  },
+  {
+    "sample_id": "politifact4275",
+    "group_id": "group_0319"
+  },
+  {
+    "sample_id": "politifact442",
+    "group_id": "group_0320"
+  },
+  {
+    "sample_id": "politifact51",
+    "group_id": "group_0324"
+  },
+  {
+    "sample_id": "politifact514",
+    "group_id": "group_0325"
+  },
+  {
+    "sample_id": "politifact5321",
+    "group_id": "group_0326"
+  },
+  {
+    "sample_id": "politifact537",
+    "group_id": "group_0327"
+  },
+  {
+    "sample_id": "politifact5632",
+    "group_id": "group_0329"
+  },
+  {
+    "sample_id": "politifact66",
+    "group_id": "group_0330"
+  },
+  {
+    "sample_id": "politifact681",
+    "group_id": "group_0306"
+  },
+  {
+    "sample_id": "politifact690",
+    "group_id": "group_0333"
+  },
+  {
+    "sample_id": "politifact769",
+    "group_id": "group_0335"
+  },
+  {
+    "sample_id": "politifact785",
+    "group_id": "group_0337"
+  },
+  {
+    "sample_id": "politifact7888",
+    "group_id": "group_0338"
+  },
+  {
+    "sample_id": "politifact8069",
+    "group_id": "group_0339"
+  },
+  {
+    "sample_id": "politifact8838",
+    "group_id": "group_0198"
+  },
+  {
+    "sample_id": "politifact9691",
+    "group_id": "group_0341"
+  },
+  {
+    "sample_id": "politifact9734",
+    "group_id": "group_0342"
+  }
+]

@@ -1,0 +1,214 @@
+[
+  {
+    "sample_id": "gossipcop-2365780434",
+    "group_id": "group_0014"
+  },
+  {
+    "sample_id": "gossipcop-2405182303",
+    "group_id": "group_0015"
+  },
+  {
+    "sample_id": "gossipcop-3000021440",
+    "group_id": "group_0021"
+  },
+  {
+    "sample_id": "gossipcop-3175262640",
+    "group_id": "group_0023"
+  },
+  {
+    "sample_id": "gossipcop-3196321022",
+    "group_id": "group_0024"
+  },
+  {
+    "sample_id": "gossipcop-3996753978",
+    "group_id": "group_0033"
+  },
+  {
+    "sample_id": "gossipcop-4373322193",
+    "group_id": "group_0037"
+  },
+  {
+    "sample_id": "gossipcop-4433782210",
+    "group_id": "group_0038"
+  },
+  {
+    "sample_id": "gossipcop-4963306668",
+    "group_id": "group_0041"
+  },
+  {
+    "sample_id": "gossipcop-5189580095",
+    "group_id": "group_0046"
+  },
+  {
+    "sample_id": "gossipcop-5493993751",
+    "group_id": "group_0050"
+  },
+  {
+    "sample_id": "gossipcop-7391946984",
+    "group_id": "group_0065"
+  },
+  {
+    "sample_id": "gossipcop-8107039710",
+    "group_id": "group_0069"
+  },
+  {
+    "sample_id": "gossipcop-8183298967",
+    "group_id": "group_0070"
+  },
+  {
+    "sample_id": "gossipcop-846305",
+    "group_id": "group_0076"
+  },
+  {
+    "sample_id": "gossipcop-868642",
+    "group_id": "group_0096"
+  },
+  {
+    "sample_id": "gossipcop-882128",
+    "group_id": "group_0108"
+  },
+  {
+    "sample_id": "gossipcop-887233",
+    "group_id": "group_0114"
+  },
+  {
+    "sample_id": "gossipcop-893257",
+    "group_id": "group_0121"
+  },
+  {
+    "sample_id": "gossipcop-894416",
+    "group_id": "group_0122"
+  },
+  {
+    "sample_id": "gossipcop-908630",
+    "group_id": "group_0143"
+  },
+  {
+    "sample_id": "gossipcop-925528",
+    "group_id": "group_0021"
+  },
+  {
+    "sample_id": "gossipcop-926957",
+    "group_id": "group_0156"
+  },
+  {
+    "sample_id": "gossipcop-936100",
+    "group_id": "group_0165"
+  },
+  {
+    "sample_id": "gossipcop-938852",
+    "group_id": "group_0167"
+  },
+  {
+    "sample_id": "gossipcop-940180",
+    "group_id": "group_0170"
+  },
+  {
+    "sample_id": "gossipcop-941864",
+    "group_id": "group_0173"
+  },
+  {
+    "sample_id": "gossipcop-950749",
+    "group_id": "group_0179"
+  },
+  {
+    "sample_id": "gossipcop-9658632569",
+    "group_id": "group_0187"
+  },
+  {
+    "sample_id": "politifact10787",
+    "group_id": "group_0193"
+  },
+  {
+    "sample_id": "politifact10945",
+    "group_id": "group_0021"
+  },
+  {
+    "sample_id": "politifact11899",
+    "group_id": "group_0200"
+  },
+  {
+    "sample_id": "politifact13589",
+    "group_id": "group_0215"
+  },
+  {
+    "sample_id": "politifact13827",
+    "group_id": "group_0222"
+  },
+  {
+    "sample_id": "politifact13887",
+    "group_id": "group_0225"
+  },
+  {
+    "sample_id": "politifact13924",
+    "group_id": "group_0227"
+  },
+  {
+    "sample_id": "politifact14008",
+    "group_id": "group_0231"
+  },
+  {
+    "sample_id": "politifact14071",
+    "group_id": "group_0234"
+  },
+  {
+    "sample_id": "politifact14233",
+    "group_id": "group_0238"
+  },
+  {
+    "sample_id": "politifact14548",
+    "group_id": "group_0258"
+  },
+  {
+    "sample_id": "politifact14795",
+    "group_id": "group_0270"
+  },
+  {
+    "sample_id": "politifact15096",
+    "group_id": "group_0274"
+  },
+  {
+    "sample_id": "politifact15138",
+    "group_id": "group_0277"
+  },
+  {
+    "sample_id": "politifact15158",
+    "group_id": "group_0278"
+  },
+  {
+    "sample_id": "politifact15210",
+    "group_id": "group_0282"
+  },
+  {
+    "sample_id": "politifact3180",
+    "group_id": "group_0308"
+  },
+  {
+    "sample_id": "politifact3527",
+    "group_id": "group_0311"
+  },
+  {
+    "sample_id": "politifact3693",
+    "group_id": "group_0312"
+  },
+  {
+    "sample_id": "politifact4887",
+    "group_id": "group_0322"
+  },
+  {
+    "sample_id": "politifact6641",
+    "group_id": "group_0331"
+  },
+  {
+    "sample_id": "politifact667",
+    "group_id": "group_0332"
+  },
+  {
+    "sample_id": "politifact746",
+    "group_id": "group_0334"
+  },
+  {
+    "sample_id": "politifact779",
+    "group_id": "group_0336"
+  }
+]
