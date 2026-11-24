@@ -35,6 +35,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from zipfile import BadZipFile
 
 import numpy as np
 
@@ -201,7 +202,7 @@ def _load_npy(data: bytes) -> np.ndarray:
 
     try:
         arr = np.load(io.BytesIO(data), allow_pickle=False)
-    except (ValueError, EOFError) as exc:
+    except (ValueError, EOFError, BadZipFile) as exc:
         raise _fail("array is not a plain .npy") from exc
     if isinstance(arr, np.lib.npyio.NpzFile):
         arr.close()

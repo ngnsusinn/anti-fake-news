@@ -179,6 +179,23 @@ def test_pickled_array_rejected_even_with_matching_checksum(exported):
         load_bundle(bundle)
 
 
+@pytest.mark.parametrize("truncated", [False, True], ids=["archive", "truncated-archive"])
+def test_numpy_archive_rejected_even_with_matching_checksum(exported, truncated):
+    out, _ = exported
+    bundle = out / "image_only"
+    relative = "classifier/intercept.npy"
+    buf = io.BytesIO()
+    np.savez(buf, intercept=np.zeros(1))
+    data = buf.getvalue()
+    if truncated:
+        data = data[:8]
+    (bundle / relative).write_bytes(data)
+    _rewrite_meta(bundle, lambda m: m["files"].update(
+        {relative: {"sha256": sha256_bytes(data), "bytes": len(data)}}))
+    with pytest.raises(BundleError, match="plain .npy"):
+        load_bundle(bundle)
+
+
 @pytest.mark.parametrize("mutate", [
     lambda m: m.update(threshold=1.5),
     lambda m: m.update(threshold=True),
