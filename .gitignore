@@ -33,3 +33,5 @@ cache/
 *.h5
 *.hdf5
 
+# Generated, unpacked Chromium package.
+/release/extension/

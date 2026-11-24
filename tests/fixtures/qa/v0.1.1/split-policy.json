@@ -1,0 +1,12 @@
+{
+  "fixture_id": "qa-split-policy-v0.1.1",
+  "source": "synthetic",
+  "split_proportions": {"train": 0.70, "validation": 0.15, "test": 0.15},
+  "seed_proposed": 42,
+  "group_disjoint": true,
+  "training_fit_allowed": ["train"],
+  "model_selection_allowed": ["validation"],
+  "test_allowed_only_after_freeze": true,
+  "contains_research_data": false,
+  "note": "Chỉ là hợp đồng kiểm tra metadata; phải đối chiếu với giao thức thật được phê duyệt ở issue #4."
+}

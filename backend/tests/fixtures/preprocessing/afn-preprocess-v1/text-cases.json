@@ -1,0 +1,73 @@
+{
+  "preprocess_version": "afn-preprocess-v1",
+  "synthetic": true,
+  "description": "Synthetic text fixtures for AFN-005 parity (train == inference). Not research data. Expected values are produced by backend/app/preprocessing.py; changing them requires bumping PREPROCESS_VERSION.",
+  "cases": [
+    {
+      "id": "plain",
+      "title": "Senate passes budget bill",
+      "body": "The Senate passed the bill on Tuesday.",
+      "expected_text": "Senate passes budget bill\nThe Senate passed the bill on Tuesday.",
+      "expected_truncated": false,
+      "expected_body_word_count": 7
+    },
+    {
+      "id": "title_missing",
+      "title": null,
+      "body": "  Body only,\n\twith   messy spaces.  ",
+      "expected_text": "Body only, with messy spaces.",
+      "expected_truncated": false,
+      "expected_body_word_count": 5
+    },
+    {
+      "id": "title_empty_after_normalisation",
+      "title": "   ​ ",
+      "body": "Short body.",
+      "expected_text": "Short body.",
+      "expected_truncated": false,
+      "expected_body_word_count": 2
+    },
+    {
+      "id": "urls_removed",
+      "title": "See https://example.com/a?b=1",
+      "body": "Read more at www.example.org/story or http://t.co/x now.",
+      "expected_text": "See\nRead more at or now.",
+      "expected_truncated": false,
+      "expected_body_word_count": 5
+    },
+    {
+      "id": "hyphen_and_unicode",
+      "title": "State–run media — claims",
+      "body": "A well‑known infor-\nmation co­operation ＡＢＣ ﬁle.",
+      "expected_text": "State-run media - claims\nA well-known information cooperation ABC file.",
+      "expected_truncated": false,
+      "expected_body_word_count": 6
+    },
+    {
+      "id": "exactly_cap",
+      "title": "Cap",
+      "body_repeat": {"word": "w", "count": 1500},
+      "expected_truncated": false,
+      "expected_body_word_count": 1500
+    },
+    {
+      "id": "over_cap",
+      "title": "Cap",
+      "body_repeat": {"word": "w", "count": 1501},
+      "expected_truncated": true,
+      "expected_body_word_count": 1500
+    },
+    {
+      "id": "api_max_chars_not_word_cap",
+      "title": null,
+      "body_repeat": {"word": "abcdefghi", "count": 5000},
+      "note": "5,000 words joined by single spaces = 49,999 code points: within the API transport limit, but truncated to 1,500 words by ML preprocessing.",
+      "expected_truncated": true,
+      "expected_body_word_count": 1500
+    }
+  ],
+  "error_cases": [
+    {"id": "body_only_url", "title": "T", "body": "https://example.com", "error": "EmptyTextError"},
+    {"id": "body_whitespace", "title": "T", "body": " \n\t​ ", "error": "EmptyTextError"}
+  ]
+}

@@ -1,0 +1,43 @@
+# AFN-006 ML environment lock. Install ON TOP OF backend/requirements.txt in the
+# same .venv (shared preprocessing + future model loader):
+#   python -m pip install -r backend/requirements.txt -r ml/requirements.txt
+# Resolved and smoke-tested: Python 3.14.7, macOS 15 arm64 (Apple M1, CPU).
+# NOT yet verified on the team's Windows x64 / Python 3.10 baseline: see
+# docs/ml-environment.md "Open items". Linux: add
+#   --extra-index-url https://download.pytorch.org/whl/cpu
+# to get CPU-only torch wheels instead of CUDA builds.
+
+# --- Direct ML dependencies ---
+torch==2.15.0
+torchvision==0.29.2
+transformers==5.24.0
+huggingface-hub==2.4.0
+safetensors==0.8.0
+tokenizers==0.23.3
+numpy==2.5.5
+scipy==1.18.1
+scikit-learn==1.9.1
+pillow==13.0.0
+pyyaml==6.0.4
+
+# --- Resolved transitive dependencies ---
+cloudpickle==3.1.3
+filelock==4.3.0
+fsspec==2026.9.0
+hf-xet==1.8.0
+jinja2==3.1.6
+joblib==1.6.0
+markdown-it-py==4.3.0
+markupsafe==3.0.4
+mdurl==0.1.2
+mpmath==1.3.0
+narwhals==2.29.0
+networkx==3.7
+regex==2026.11.19
+rich==15.0.0
+setuptools==84.2.1
+shellingham==1.5.4
+sympy==1.14.0
+threadpoolctl==3.8.0
+tqdm==4.70.1
+typer==0.29.2

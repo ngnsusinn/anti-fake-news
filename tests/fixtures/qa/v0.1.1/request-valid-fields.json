@@ -1,0 +1,11 @@
+{
+  "fixture_id": "qa-multipart-fields-v0.1.1",
+  "source": "synthetic",
+  "fields": {
+    "request_id": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "Tiêu đề kiểm thử",
+    "text": "Nội dung tổng hợp để kiểm thử định dạng yêu cầu."
+  },
+  "file_part": { "name": "image", "filename": "generated.png", "content_type": "image/png" },
+  "note": "Blueprint only; generated.png must be a locally authored PNG. Do not send this JSON as /predict body."
+}

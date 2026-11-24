@@ -1,0 +1,12 @@
+{
+  "fixture_id": "qa-session-race-v0.1.1",
+  "source": "synthetic",
+  "tab_id": 123,
+  "request_a": "550e8400-e29b-41d4-a716-446655440001",
+  "request_b": "550e8400-e29b-41d4-a716-446655440002",
+  "send_order": ["request_a", "request_b"],
+  "response_order": ["request_b", "request_a"],
+  "expected_visible_request": "request_b",
+  "expected_discarded_request": "request_a",
+  "note": "Không có nội dung bài báo hay kết quả mô hình thật."
+}

@@ -49,3 +49,23 @@ publisher_host nhận diện cùng hostname nhà xuất bản. image_url_group l
 1. Rà soát chất lượng nội dung đã thu hồi. Bước recovery đã kiểm tra đủ 400 mẫu theo tiêu chí có thân bài hoặc ảnh và xác nhận mỗi nhóm nguồn–nhãn có 100 mẫu. Tuần 2 ưu tiên đối chiếu bài sau chuyển hướng với tiêu đề gốc, rà thân bài quá ngắn và kiểm tra ảnh đại diện có đúng ngữ cảnh. Ghi kết quả audit theo sample_id và lưu ảnh đã duyệt kèm checksum để chuẩn bị tập huấn luyện.
 2. Rà các nhóm cùng ảnh hoặc tiêu đề, gán event_id sau đối chiếu và giữ toàn bộ một sự kiện hoặc nội dung trùng trong cùng tập khi chia train/validation/test. Kiểm tra lại phân bố nguồn và nhãn sau khi gom.
 3. Dùng 286 ứng viên đủ hai phương thức để chuẩn bị phép so sánh text-only, image-only và đa phương thức trên cùng tập đánh giá. Mỗi nhóm nguồn–nhãn có 57–82 cặp. Nếu audit làm số cặp hợp lệ xuống dưới 200 hoặc còn quá ít sự kiện độc lập trong một nhãn, lấy thêm từ phần chờ, ưu tiên nhóm thiếu và sự kiện mới. Báo cáo số thực tế sau audit. Các snapshot chỉ chứa bản ghi từ CSV nguồn.
+
+## Bàn giao bằng chứng cho QA và AFN-016
+
+Đặt gói snapshot, manifest chốt, bảng đối soát pilot và `SHA256SUMS` ở nơi thành viên
+QA và AFN-016 có quyền đọc. Ghi vị trí và SHA-256 chốt trong PR khi bàn giao. Với checksum do DATA ghi riêng, truyền thêm `--expected-final-sha256 <SHA-256>` để đối chiếu gói với bản bàn giao.
+Chạy lệnh sau với đường dẫn các snapshot thật theo thứ tự 228, 300, 350 và 400 dòng.
+
+```
+python scripts/verify_recovery_snapshots.py --checksums SHA256SUMS --final valid-400.jsonl snapshot-228.jsonl snapshot-300.jsonl snapshot-350.jsonl snapshot-400.jsonl
+```
+
+Script đối chiếu checksum, đếm ID duy nhất, kiểm tra quan hệ tập con và so bản 400 dòng
+với manifest chốt. Kiểm thử script dùng dữ liệu tổng hợp. Chưa chạy trên gói thật vì
+chưa có đường dẫn bàn giao. Cần DATA giải thích chênh lệch giữa 230 ứng viên thu hồi
+được ít nhất một phương thức trong báo cáo pilot và 228 mẫu dùng cho batch.
+
+Kiểm tra quyền nguồn, thân bài tiếng Anh và ảnh liên quan theo
+[hợp đồng manifest AFN-001](../docs/data-contract.md) (nháp). Lưu riêng báo cáo
+đối soát ID của 230 ứng viên và lý do loại từng bản ghi để giải thích mốc 228.
+Giữ các bản JSONL thật và nội dung bài/ảnh ở nơi nhóm được phép truy cập.

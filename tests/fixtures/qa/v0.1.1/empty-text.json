@@ -1,0 +1,9 @@
+{
+  "fixture_id": "qa-empty-text-v0.1.1",
+  "source": "synthetic",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Bài thử nghiệm",
+  "text": "   ",
+  "expected_error_code": "invalid_input",
+  "note": "Attach a locally generated valid test image for endpoint validation; real mode currently returns 503."
+}
