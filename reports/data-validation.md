@@ -26,3 +26,18 @@ trước/sau, lý do loại và checksum. Bàn giao checksum cho AFN-017 sau khi
 
 Số liệu từ bản 352 dòng trước đây là số liệu khảo sát. Cần inventory và đối soát
 quyền từ DATA để xác nhận đủ mẫu và nguyên nhân loại trên batch AFN-003.
+
+## Tạo lại gói snapshot khi đủ bằng chứng gốc
+
+Nếu DATA còn manifest chốt và nhật ký hoàn thành batch, xuất một ID mỗi dòng theo
+đúng thứ tự trong nhật ký và ghi hash manifest từ nguồn bàn giao độc lập:
+
+```sh
+python -m scripts.build_recovery_snapshots --final /private/original-valid-400.jsonl \
+  --expected-final-sha256 <sha256-tu-DATA> --completion-order /private/ordered-ids.txt \
+  --out data/private/afn-003-rebuilt
+```
+
+Lệnh giữ nguyên byte của manifest chốt, dựng mốc 228, 300 và 350 theo nhật ký,
+kiểm tra bốn snapshot rồi đóng gói riêng. Bảng đối soát 230 → 228 và bằng chứng
+nguồn/quyền vẫn phải lấy từ DATA.
