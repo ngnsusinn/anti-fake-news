@@ -17,7 +17,8 @@ Kết quả gồm bốn CSV riêng theo nhóm, đặt tại validation_reports:
 
 Mỗi CSV có bốn cột: sampleid, pathjson, path_anh, phan_loai.
 Hai cột đường dẫn là đường dẫn tuyệt đối của file trên ổ đĩa,
-KHÔNG phải URL từ nội dung JSON.
+KHÔNG phải URL từ nội dung JSON. Báo cáo recovery-attempts.jsonl ghi trạng thái
+của từng mẫu nguồn. Chạy lại cùng bốn CSV tái sử dụng các JSON và ảnh đã lưu.
 
 Quy tắc phân loại (phải có title mới thuộc ba nhóm đầu):
     full   : có title, text và ảnh đã tải trên đĩa
@@ -34,10 +35,16 @@ import argparse
 import csv
 import hashlib
 import json
+import re
+import sqlite3
 import subprocess
 import sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import closing
+from datetime import datetime, timezone
+from io import BytesIO
+from tempfile import TemporaryDirectory
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -52,7 +59,6 @@ CODE_DIR = None
 DATASET_DIR = None
 OUTPUT_DIR = None
 REPORT_DIR = None
-CONFIG_PATH = None
 TWEET_KEYS_PATH = None
 
 def config_path(repo):
@@ -65,7 +71,6 @@ def config_path(repo):
     # dataset_dir = repo / "pilot"
     output_dir = repo / "fakenewsnet_raw_output"
     report_dir = repo / "validation_reports"
-    config_file = code_dir / "config.json"
     tweet_keys_file = code_dir / "resources" / "tweet_keys_file.json"
 
     return (
@@ -73,7 +78,6 @@ def config_path(repo):
         dataset_dir,
         output_dir,
         report_dir,
-        config_file,
         tweet_keys_file
     )
 
@@ -89,6 +93,7 @@ IMAGE_LIST_KEYS = ('images', 'img', 'image_list', 'image_urls', 'image')
 
 MAX_WORKERS = 8
 REQUEST_TIMEOUT = 20
+MAX_IMAGE_PIXELS = 20_000_000
 MAX_IMAGE_BYTES = 20 * 1024 * 1024  # Tối đa 20 MB/ảnh.
 HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; FakeNewsNetRecovery/1.0)'}
 CSV_FIELDS = ('sampleid', 'pathjson', 'path_anh', 'phan_loai')
@@ -108,7 +113,7 @@ GROUPS = [
 def validate_dataset_dir(dataset_dir: Path) -> Path:
     """Nhận đúng một đường dẫn; dùng chung cho dataset gốc và pilot."""
     dataset_dir = dataset_dir.expanduser().resolve()
-    if not dataset_dir.is_dir():    
+    if not dataset_dir.is_dir():
         raise FileNotFoundError(f'Không tìm thấy thư mục dataset: {dataset_dir}')
 
     missing = [filename for filename in REQUIRED_CSV if not (dataset_dir / filename).is_file()]
@@ -117,6 +122,106 @@ def validate_dataset_dir(dataset_dir: Path) -> Path:
             f'Thư mục {dataset_dir} thiếu CSV: {", ".join(missing)}'
         )
     return dataset_dir
+
+
+def dataset_checksum(dataset_dir: Path) -> str:
+    hashes = [hashlib.sha256((dataset_dir / name).read_bytes()).digest() for name in REQUIRED_CSV]
+    return hashlib.sha256(b"".join(hashes)).hexdigest()
+
+
+def is_article_url(url: str) -> bool:
+    if not url or any(char.isspace() for char in url):
+        return False
+    try:
+        parsed = urlparse(url if "://" in url else f"https://{url}")
+        return parsed.scheme in ("http", "https") and bool(parsed.hostname) and parsed.port != 0
+    except ValueError:
+        return False
+
+
+def prepare_pending_inputs(
+    dataset_dir: Path, pending_dir: Path, output_dir: Path
+) -> tuple[list[dict], int]:
+    attempts = []
+    pending_count = 0
+    pending_dir.mkdir(parents=True, exist_ok=True)
+    for source, label in GROUPS:
+        filename = f"{source}_{label}.csv"
+        seen = set()
+        with (
+            (dataset_dir / filename).open(encoding="utf-8-sig", newline="") as source_file,
+            (pending_dir / filename).open("w", encoding="utf-8", newline="") as target_file,
+        ):
+            reader = csv.DictReader(source_file)
+            if not {"id", "news_url", "title"}.issubset(reader.fieldnames or []):
+                raise ValueError(f"{filename}: thiếu cột id, news_url hoặc title")
+            writer = csv.DictWriter(target_file, fieldnames=reader.fieldnames)
+            writer.writeheader()
+            for row in reader:
+                source_id = (row.get("id") or "").strip()
+                if not re.fullmatch(r"[A-Za-z0-9_-]+", source_id) or source_id in seen:
+                    raise ValueError(f"{filename}: ID không hợp lệ hoặc bị trùng tại dòng {reader.line_num}")
+                seen.add(source_id)
+                source_url = (row.get("news_url") or "").strip()
+                article_path = output_dir / source / label / source_id / "news content.json"
+                attempts.append({
+                    "source": source,
+                    "label": label,
+                    "source_id": source_id,
+                    "sample_id": f"{source}:{label}:{source_id}",
+                    "source_url": source_url,
+                    "article_path": article_path,
+                })
+                if is_article_url(source_url) and not read_json(article_path):
+                    row["id"] = source_id
+                    row["news_url"] = source_url
+                    writer.writerow(row)
+                    pending_count += 1
+    return attempts, pending_count
+
+
+def saved_at(path: Path) -> str:
+    return datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat()
+
+
+def export_attempts(attempts: list[dict], image_paths: dict[Path, str], completed: bool) -> None:
+    """Write a local audit record for every input ID, including missing JSON."""
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    target = REPORT_DIR / "recovery-attempts.jsonl"
+    recorded_at = datetime.now(timezone.utc).isoformat()
+    with TemporaryDirectory(dir=REPORT_DIR) as temporary_dir:
+        temporary = Path(temporary_dir) / target.name
+        with temporary.open("w", encoding="utf-8", newline="\n") as file:
+            for attempt in attempts:
+                article = attempt["article_path"]
+                image_path = image_paths.get(article, "")
+                data = read_json(article)
+                status = "excluded"
+                if not attempt["source_url"]:
+                    reason = "missing_url"
+                elif not is_article_url(attempt["source_url"]):
+                    reason = "invalid_url"
+                elif not completed:
+                    status, reason = "pending", "interrupted"
+                elif not data:
+                    reason = "article_not_recovered"
+                elif not has_text_field(data, TITLE_KEYS):
+                    reason = "missing_title"
+                elif classify_article(article, image_path) == "error":
+                    reason = "neither_recovered"
+                else:
+                    status, reason = "recovered", None
+                record = {key: value for key, value in attempt.items() if key != "article_path"}
+                record.update({
+                    "status": status,
+                    "exclusion_reason": reason,
+                    "article_url": data.get("url") if data else None,
+                    "article_saved_at": saved_at(article) if data else None,
+                    "image_saved_at": saved_at(Path(image_path)) if image_path else None,
+                    "recorded_at": recorded_at,
+                })
+                file.write(json.dumps(record, ensure_ascii=False) + "\n")
+        temporary.replace(target)
 
 
 def write_config(dataset_dir: Path) -> None:
@@ -140,14 +245,14 @@ def write_config(dataset_dir: Path) -> None:
         ],
         'data_features_to_collect': ['news_articles'],
     }
-    CONFIG_PATH.write_text(
+    (dataset_dir / "config.json").write_text(
         json.dumps(config, ensure_ascii=False, indent=2), encoding='utf-8'
     )
     print(f'[CẤU HÌNH] Dataset đầu vào: {dataset_dir}')
     print(f'[CẤU HÌNH] JSON đầu ra: {OUTPUT_DIR}')
 
 
-def run_fakenewsnet() -> None:
+def run_fakenewsnet(dataset_dir: Path) -> None:
     """
     Cài đặt các thư viện cần thiết và chạy FakeNewsNet main.py.
     Giữ nguyên logic thu thập dữ liệu của tác giả.
@@ -201,8 +306,8 @@ def run_fakenewsnet() -> None:
     print("\n[BƯỚC 3/3] Thu thập dữ liệu JSON...")
 
     subprocess.run(
-        [sys.executable, "main.py"],
-        cwd=CODE_DIR,
+        [sys.executable, str(main_path)],
+        cwd=dataset_dir,
         check=True
     )
 
@@ -294,6 +399,20 @@ def detect_image_format(content: bytes) -> str | None:
     return None
 
 
+def is_decodable_image(source) -> bool:
+    from PIL import Image
+
+    try:
+        with Image.open(source) as image:
+            width, height = image.size
+            if width * height > MAX_IMAGE_PIXELS:
+                return False
+            image.load()
+            return True
+    except (OSError, ValueError, Image.DecompressionBombError):
+        return False
+
+
 def download_image(url: str, image_base_path: Path) -> Path | None:
     """Tải ảnh có giới hạn kích thước; thất bại không để lại file dở."""
     parsed = urlparse(url)
@@ -321,7 +440,7 @@ def download_image(url: str, image_base_path: Path) -> Path | None:
                         return None
 
         image_format = detect_image_format(bytes(data))
-        if image_format is None:
+        if image_format is None or not is_decodable_image(BytesIO(data)):
             return None
         target_path = image_base_path.with_suffix('.' + image_format)
         temporary_file.write_bytes(data)
@@ -350,7 +469,11 @@ def recover_article_image(json_path: Path) -> str:
         # Chỉ chấp nhận file ảnh đã tồn tại trong chính thư mục chứa JSON.
         for extension in ('jpg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'avif', 'heic'):
             existing_file = image_base.with_suffix('.' + extension)
-            if existing_file.is_file() and existing_file.stat().st_size > 0:
+            if (
+                existing_file.is_file()
+                and 0 < existing_file.stat().st_size <= MAX_IMAGE_BYTES
+                and is_decodable_image(existing_file)
+            ):
                 return str(existing_file.resolve())
 
         downloaded_file = download_image(url, image_base)
@@ -458,127 +581,63 @@ def export_group_csvs(
 # ============================================================
 # 6. ĐIỂM BẮT ĐẦU CHƯƠNG TRÌNH
 # ============================================================
-    
+
 def main() -> None:
     global REPO, CODE_DIR, DATASET_DIR
-    global OUTPUT_DIR, REPORT_DIR
-    global CONFIG_PATH, TWEET_KEYS_PATH
+    global OUTPUT_DIR, REPORT_DIR, TWEET_KEYS_PATH
 
     # ========================================================
     # 1. NHẬP ĐƯỜNG DẪN REPO
     # ========================================================
 
-    REPO = Path(
-        input("Nhập đường dẫn đến REPO: ").strip()
-    ).expanduser().resolve()
-
-    if not REPO.is_dir():
-        raise FileNotFoundError(
-            f"Không tìm thấy thư mục REPO: {REPO}"
-        )
-
-    # ========================================================
-    # 2. KHỞI TẠO CÁC ĐƯỜNG DẪN TOÀN CỤC
-    # ========================================================
-
-    (
-        CODE_DIR,
-        DATASET_DIR,
-        OUTPUT_DIR,
-        REPORT_DIR,
-        CONFIG_PATH,
-        TWEET_KEYS_PATH
-    ) = config_path(REPO)
-
-    # ========================================================
-    # 3. LỰA CHỌN DATASET ĐẦU VÀO
-    # ========================================================
-
     parser = argparse.ArgumentParser(
-        description=(
-            "Thu thập FakeNewsNet từ dataset hoặc pilot_dataset."
-        )
+        description="Thu thập FakeNewsNet từ dataset hoặc pilot_dataset.",
     )
-
-    parser.add_argument(
-        "--dataset-dir",
-        type=Path,
-        default=DATASET_DIR,
-        help="Thư mục chứa 4 file CSV đầu vào."
-    )
-
+    parser.add_argument("--repo", type=Path, help="Thư mục checkout FakeNewsNet")
+    parser.add_argument("--dataset-dir", type=Path, help="Thư mục chứa 4 file CSV đầu vào")
     args = parser.parse_args()
 
-    # Cập nhật đường dẫn dataset đã được lựa chọn
-    DATASET_DIR = validate_dataset_dir(
-        args.dataset_dir.expanduser().resolve()
-    )
+    repo_input = args.repo or Path(input("Nhập đường dẫn đến REPO: ").strip())
+    REPO = repo_input.expanduser().resolve()
+    if not REPO.is_dir():
+        raise FileNotFoundError(f"Không tìm thấy thư mục REPO: {REPO}")
 
-    print(f"\n[REPO] {REPO}")
+    CODE_DIR, DATASET_DIR, OUTPUT_DIR, REPORT_DIR, TWEET_KEYS_PATH = config_path(REPO)
+    DATASET_DIR = validate_dataset_dir(args.dataset_dir or DATASET_DIR)
+    OUTPUT_DIR = OUTPUT_DIR / dataset_checksum(DATASET_DIR)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     print(f"[DATASET] {DATASET_DIR}")
     print(f"[OUTPUT] {OUTPUT_DIR}")
     print(f"[REPORT] {REPORT_DIR}")
 
-    # ========================================================
-    # 4. CẤU HÌNH VÀ CHẠY FAKENEWSNET
-    # ========================================================
-
-    print("\n[1/4] Cấu hình FakeNewsNet...")
-
-    write_config(DATASET_DIR)
-
-    print("\n[2/4] Thu thập dữ liệu bài báo...")
-
-    run_fakenewsnet()
-
-    # ========================================================
-    # 5. TÌM TOÀN BỘ FILE JSON ĐÃ THU THẬP
-    # ========================================================
-
-    print("\n[3/4] Tìm JSON và tải ảnh...")
-
-    grouped_jsons = find_article_jsons()
-
-    json_files = [
-        path
-        for paths in grouped_jsons.values()
-        for path in paths
-    ]
-
-    if not json_files:
-        raise RuntimeError(
-            f"Không tìm thấy JSON bài báo tại {OUTPUT_DIR}"
-        )
-
-    print(f"Tổng số JSON tìm thấy: {len(json_files)}")
-
-    # Tải tối đa một ảnh cho mỗi bài báo
-    # Ảnh được lưu cùng thư mục chứa JSON tương ứng
-    image_paths = recover_all_images(json_files)
-
-    # ========================================================
-    # 6. VALIDATE VÀ XUẤT CSV THEO TỪNG NHÓM
-    # ========================================================
-
-    print("\n[4/4] Validate và xuất CSV...")
-
-    REPORT_DIR.mkdir(
-        parents=True,
-        exist_ok=True
-    )
-
-    # Xuất bốn CSV tương ứng với bốn nhóm dữ liệu
-    # Mỗi CSV gồm: sampleid, pathjson, path_anh, phan_loai
-    export_group_csvs(
-        grouped_jsons,
-        image_paths
-    )
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    with closing(sqlite3.connect(REPORT_DIR / ".recovery-lock.sqlite", timeout=0)) as reservation:
+        reservation.execute("BEGIN IMMEDIATE")
+        recover_dataset()
 
     print("\n[HOÀN THÀNH] Pipeline đã chạy xong.")
     print(f"Thư mục báo cáo: {REPORT_DIR}")
 
 
+def recover_dataset() -> None:
+    with TemporaryDirectory(dir=OUTPUT_DIR) as temporary_dir:
+        pending_dir = Path(temporary_dir)
+        attempts, pending_count = prepare_pending_inputs(DATASET_DIR, pending_dir, OUTPUT_DIR)
+        image_paths = {}
+        completed = False
+        try:
+            if pending_count:
+                write_config(pending_dir)
+                run_fakenewsnet(pending_dir)
+
+            grouped_jsons = find_article_jsons()
+            json_files = [path for paths in grouped_jsons.values() for path in paths]
+            image_paths = recover_all_images(json_files)
+            export_group_csvs(grouped_jsons, image_paths)
+            completed = True
+        finally:
+            export_attempts(attempts, image_paths, completed)
+
+
 if __name__ == "__main__":
     main()
-
-

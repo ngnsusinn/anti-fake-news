@@ -1,0 +1,9 @@
+{
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "label": "real",
+  "fake_score": 0.42,
+  "model_version": "mock-v0.1.1",
+  "model_id": "dev-mock-not-a-model",
+  "processing_time_ms": 0,
+  "text_truncated": false
+}

@@ -20,7 +20,7 @@ Khi trang khó trích xuất hoặc ảnh bị chặn, người dùng dán thân
 
 | Thành phần | Phạm vi bàn giao |
 | --- | --- |
-| Ngôn ngữ | Bài viết tiếng Việt, giao diện tiếng Việt |
+| Ngôn ngữ | Bài viết tiếng Anh, giao diện tiếng Việt |
 | Đơn vị phân tích | Tiêu đề, thân bài viết, body của 1 trang thông tin |
 | Nhãn | `fake` và `real` theo nguồn dữ liệu |
 | Trình duyệt | Trình duyệt xây dựng dựa trên Chromium |

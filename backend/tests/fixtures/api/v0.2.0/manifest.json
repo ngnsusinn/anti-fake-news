@@ -1,0 +1,97 @@
+{
+  "contract_version": "0.2.0",
+  "synthetic": true,
+  "description": "Synthetic development fixtures only. Timing 0 is a placeholder, not performance evidence.",
+  "cases": [
+    {
+      "body_file": "health-real-not-loaded.json",
+      "schema": "HealthResponse",
+      "status": 200,
+      "headers": {
+        "X-AFN-Inference-Mode": "real",
+        "X-AFN-Model-State": "not_loaded",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "health-mock-ready.json",
+      "schema": "HealthResponse",
+      "status": 200,
+      "headers": {
+        "X-AFN-Inference-Mode": "mock",
+        "X-AFN-Model-State": "ready",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "predict-mock.json",
+      "schema": "PredictResponse",
+      "status": 200,
+      "headers": {
+        "X-AFN-Inference-Mode": "mock",
+        "X-AFN-Model-State": "ready",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "not-ready-correlated.json",
+      "schema": "ErrorResponse",
+      "status": 503,
+      "headers": {
+        "X-AFN-Inference-Mode": "real",
+        "X-AFN-Model-State": "not_loaded",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "not-ready-correlated.json",
+      "schema": "ErrorResponse",
+      "status": 503,
+      "headers": {
+        "X-AFN-Inference-Mode": "mock",
+        "X-AFN-Model-State": "error",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "invalid-input.json",
+      "schema": "ErrorResponse",
+      "status": 400,
+      "headers": {
+        "X-AFN-Inference-Mode": "mock",
+        "X-AFN-Model-State": "ready",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "invalid-input-correlated.json",
+      "schema": "ErrorResponse",
+      "status": 400,
+      "headers": {
+        "X-AFN-Inference-Mode": "mock",
+        "X-AFN-Model-State": "ready",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "request-too-large.json",
+      "schema": "ErrorResponse",
+      "status": 413,
+      "headers": {
+        "X-AFN-Inference-Mode": "mock",
+        "X-AFN-Model-State": "ready",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "body_file": "invalid-token.json",
+      "schema": "ErrorResponse",
+      "status": 401,
+      "headers": {
+        "X-AFN-Inference-Mode": "real",
+        "X-AFN-Model-State": "not_loaded",
+        "Cache-Control": "no-store"
+      }
+    }
+  ]
+}

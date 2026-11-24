@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AFN-001 manifest row (draft v1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "is_fixture",
+    "sample_id",
+    "source_id",
+    "source",
+    "label",
+    "status",
+    "publisher",
+    "source_url",
+    "title",
+    "body",
+    "retrieved_at",
+    "event_id",
+    "group_id",
+    "exclusion_reason",
+    "rights",
+    "image"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "afn-manifest-v1"
+    },
+    "is_fixture": {
+      "type": "boolean"
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^(politifact|gossipcop):(fake|real):[A-Za-z0-9_-]+$"
+    },
+    "source_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "source": {
+      "enum": [
+        "politifact",
+        "gossipcop"
+      ]
+    },
+    "label": {
+      "enum": [
+        "fake",
+        "real"
+      ]
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "rejected",
+        "pending"
+      ]
+    },
+    "publisher": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "source_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "body": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 50000,
+      "pattern": "\\S"
+    },
+    "retrieved_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "event_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "group_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "exclusion_reason": {
+      "enum": [
+        null,
+        "missing_url",
+        "article_not_recovered",
+        "wrong_article",
+        "unsupported_language",
+        "empty_body",
+        "body_too_long",
+        "missing_image",
+        "invalid_image",
+        "image_too_large",
+        "irrelevant_image",
+        "rights_unverified",
+        "duplicate",
+        "label_conflict"
+      ]
+    },
+    "rights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "unverified",
+            "local_research",
+            "redistributable",
+            "disallowed"
+          ]
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "image": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "media_type",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "media_type": {
+          "enum": [
+            "image/jpeg",
+            "image/png"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "accepted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "publisher": {
+            "type": "string"
+          },
+          "source_url": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "image": {
+            "type": "object"
+          },
+          "retrieved_at": {
+            "type": "string"
+          },
+          "exclusion_reason": {
+            "type": "null"
+          },
+          "rights": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "local_research",
+                  "redistributable"
+                ]
+              },
+              "evidence": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "rejected"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exclusion_reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "pending"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exclusion_reason": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

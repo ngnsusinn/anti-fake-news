@@ -10,9 +10,10 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from app.config import Settings
-from app.dev.transport import MockInputError, read_mock_input
+from app.errors import InputError
+from app.validation import RequestLimitsMiddleware, error_response, validate_request
 from app.inference_adapter import InferenceAdapter, create_adapter, get_inference_adapter
-from app.predictor import ModelNotReadyError, Predictor, get_predictor
+from app.predictor import ModelNotReadyError, Predictor, PredictorInput, get_predictor
 from app.schemas import (
     CONTRACT_VERSION, ErrorResponse, HealthResponse, PredictFormFields,
     PredictionResult, PredictResponse,
@@ -24,13 +25,14 @@ def inference_headers(adapter: InferenceAdapter) -> dict[str, str]:
             "X-AFN-Model-State": adapter.state.value, "Cache-Control": "no-store"}
 
 
-def mock_request_schema() -> dict:
+def predict_request_schema() -> dict:
     schema = PredictFormFields.model_json_schema()
     schema["properties"]["image"] = {"type": "string", "format": "binary"}
     schema["required"].append("image")
-    return {"requestBody": {
-        "required": False,
-        "description": "Required in explicit dev/test mock mode; unread in real mode.",
+    return {"parameters": [{"name": "X-Demo-Token", "in": "header", "required": True,
+                            "schema": {"type": "string"}}], "requestBody": {
+        "required": True,
+        "description": "Authenticated, size-bounded JPEG/PNG upload in all modes.",
         "content": {"multipart/form-data": {"schema": schema}},
     }}
 
@@ -52,6 +54,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title="Anti-fake-news local foundation", version=CONTRACT_VERSION,
                   lifespan=lifespan)
+    app.add_middleware(RequestLimitsMiddleware)
 
     @app.exception_handler(ModelNotReadyError)
     async def model_not_ready(request: Request, exc: ModelNotReadyError) -> JSONResponse:
@@ -60,12 +63,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return JSONResponse(status_code=503, content=error.model_dump(mode="json"),
                             headers=inference_headers(request.app.state.inference_adapter))
 
-    @app.exception_handler(MockInputError)
-    async def mock_input_error(request: Request, exc: MockInputError) -> JSONResponse:
-        error = ErrorResponse(detail=exc.detail, error_code=exc.error_code,
-                              request_id=exc.request_id)
-        return JSONResponse(status_code=exc.status_code, content=error.model_dump(mode="json"),
-                            headers=inference_headers(request.app.state.inference_adapter))
+    @app.exception_handler(InputError)
+    async def input_error(request: Request, exc: InputError) -> JSONResponse:
+        return error_response(exc, request.scope)
 
     @app.get("/health", response_model=HealthResponse)
     def health(response: Response,
@@ -76,28 +76,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post(
         "/predict",
         response_model=PredictResponse,
-        responses={code: {"model": ErrorResponse} for code in (400, 413, 503)},
-        openapi_extra=mock_request_schema(),
+        responses={code: {"model": ErrorResponse} for code in (400, 401, 413, 503)},
+        openapi_extra=predict_request_schema(),
         summary="Synthetic prediction only in explicit dev/test mock mode",
         description=(
-            "Real mode returns 503 without reading the body. Mock mode parses multipart "
-            "but does not authenticate or decode images. Check X-AFN-Inference-Mode "
+            "All modes require X-Demo-Token and validated multipart JPEG/PNG input. "
+            "Real mode without a model returns 503 after validation. Check X-AFN-Inference-Mode "
             "and the dev-mock model_id; mock output is not a model prediction. "
-            "See docs/dev-mock.md and contract v0.1.1."
+            "See docs/api-contract.md v0.2.0."
         ),
     )
     async def predict(
         request: Request, response: Response,
+        inputs: Annotated[PredictorInput, Depends(validate_request)],
         predictor: Annotated[Predictor, Depends(get_predictor)],
         adapter: Annotated[InferenceAdapter, Depends(get_inference_adapter)],
     ) -> PredictResponse:
         config = request.app.state.settings
         if (config.predictor_mode != "mock" or config.environment not in ("dev", "test")
                 or adapter.mode != "mock" or not adapter.ready):
-            # An override cannot enable real HTTP inference before #22/#23/#37.
+            # An override cannot enable real HTTP inference before #37.
             raise ModelNotReadyError
-        inputs = await read_mock_input(request)
-        request.state.request_id = inputs.request_id
         start = perf_counter()
         try:
             result = PredictionResult.model_validate(

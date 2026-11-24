@@ -1,11 +1,11 @@
-"""Contract v0.1.1 schemas. Uploaded files are not JSON model fields."""
+"""Contract v0.2.0 schemas. Uploaded files are not JSON model fields."""
 
 from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-CONTRACT_VERSION = "0.1.1"
+CONTRACT_VERSION = "0.2.0"
 Label = Literal["fake", "real"]
 FakeScore = Annotated[float, Field(strict=True, ge=0, le=1, allow_inf_nan=False)]
 ModelIdentifier = Annotated[str, Field(strict=True, min_length=1, pattern=r"\S")]
@@ -59,4 +59,4 @@ class ErrorResponse(ContractModel):
 class HealthResponse(ContractModel):
     service_status: Literal["ok"] = "ok"
     model_ready: bool = Field(strict=True)
-    contract_version: Literal["0.1.1"] = CONTRACT_VERSION
+    contract_version: Literal["0.2.0"] = CONTRACT_VERSION

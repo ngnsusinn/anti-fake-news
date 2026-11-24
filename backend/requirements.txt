@@ -1,4 +1,4 @@
-# Resolved backend + test environment: Python 3.10, Windows x64.
+# Verified backend + test environment: Python 3.13.1, Windows x64.
 # Exact runtime and transitive pins; ML dependency agreement remains pending.
 annotated-doc==0.0.6
 annotated-types==0.8.0
@@ -21,7 +21,7 @@ pydantic_core==2.50.4
 Pygments==2.21.0
 pytest==8.4.2
 python-dotenv==1.2.4
-# Mock-only multipart bridge; retains Python 3.10 compatibility.
+# Multipart parsing in both real and explicit mock modes.
 python-multipart==0.0.32
 starlette==1.7.0
 tomli==2.5.0
@@ -29,3 +29,6 @@ truststore==0.10.5
 typing-inspection==0.4.5
 typing_extensions==4.16.0
 uvicorn==0.54.0
+# Image helper pins match AFN-005/006 ML manifest at 9b5a0ab.
+pillow==13.0.0
+numpy==2.5.5

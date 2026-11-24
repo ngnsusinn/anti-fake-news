@@ -1,0 +1,21 @@
+{
+  "fixture_version": "v0.1.1",
+  "owner": "QA (dangnguyen0512)",
+  "created_on": "2026-11-23",
+  "provenance": "Tự tạo bằng Python hoặc khai báo JSON tổng hợp; không sao chép dữ liệu nghiên cứu.",
+  "contract": "docs/api-contract.md (v0.1.1, proposed)",
+  "split_reference": "research-test-is-not-in-this-repository-fixture-namespace",
+  "entries": [
+    {"id": "empty-text", "kind": "api", "path": "empty-text.json", "case": "T04", "source": "synthetic"},
+    {"id": "multipart-fields", "kind": "api", "path": "request-valid-fields.json", "case": "T06", "source": "synthetic"},
+    {"id": "long-text", "kind": "generated", "output": "long-text.txt", "case": "T04", "source": "synthetic"},
+    {"id": "long-title", "kind": "generated", "output": "long-title.txt", "case": "T04", "source": "synthetic"},
+    {"id": "valid-image", "kind": "generated", "output": "valid.png", "case": "T03/T06", "source": "synthetic"},
+    {"id": "corrupt-image", "kind": "generated", "output": "corrupt.png", "case": "T05", "source": "synthetic"},
+    {"id": "wrong-mime", "kind": "generated", "output": "wrong-mime.txt", "case": "T05", "source": "synthetic"},
+    {"id": "oversized-image", "kind": "generated", "output": "oversized.png", "case": "T05", "source": "synthetic; valid PNG exceeds 10 MiB"},
+    {"id": "exif-orientation-6", "kind": "generated-optional", "output": "orientation-6.jpg", "case": "T05", "source": "synthetic; Pillow is optional"},
+    {"id": "session-race", "kind": "session", "path": "session-race.json", "case": "T01/T09", "source": "synthetic"},
+    {"id": "split-policy", "kind": "split-metadata", "path": "split-policy.json", "case": "T10/T11", "source": "synthetic policy only; contains no research rows"}
+  ]
+}

@@ -1,4 +1,4 @@
-"""Configuration only: no token authorization, CORS policy or model loading."""
+"""Local settings; request enforcement lives in validation.py."""
 
 from pathlib import Path
 from typing import Literal
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
         hide_input_in_errors=True,
     )
 
-    # Restrict the supported launcher to loopback while local auth is deferred.
+    # The supported launcher is restricted to loopback.
     host: Literal["127.0.0.1", "::1", "localhost"] = "127.0.0.1"
     port: int = Field(default=8000, ge=1, le=65535)
     environment: Literal["demo", "dev", "test"] = "demo"

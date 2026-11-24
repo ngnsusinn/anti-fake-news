@@ -1,6 +1,7 @@
 # Báo cáo recovery pilot FakeNewsNet
 
-**Ngày chạy** 20/11/2026, giờ Việt Nam  
+**Ngày chạy** 20/11/2026, giờ Việt Nam
+
 **Kết quả chính** 400 bản ghi đầu vào, 242 JSON bài, 217 thân bài và 178 ảnh tải thành công. Có **165/400 mẫu (41,25%)** thu được đủ tiêu đề trích xuất, thân bài và một ảnh ứng viên.
 
 ## 1. Phạm vi và nguồn
@@ -76,3 +77,15 @@ Cần xác nhận bài và ảnh đúng ngữ cảnh trước khi chốt tập h
 - [Chi tiết 400 mẫu theo mã tác giả](https://chatgpt.com/library?file_id=libfile_8d7d46a4dea48191a97a70f0dd321c0a&account_id=personal)
 - [Báo cáo lượt chạy mã tác giả](https://chatgpt.com/library?file_id=libfile_e125de485c748191b49c2413b5a4c499&account_id=personal)
 - [Chi tiết lượt kiểm tra ban đầu](https://chatgpt.com/library?file_id=libfile_9cb06b2c88f88191976513b0d71079d4&account_id=personal)
+
+## Kiểm tra chạy tiếp và đối soát bản ghi
+
+Phiên bản script cập nhật nhận tham số tùy chọn `--repo`, tách cache theo checksum của
+bốn CSV, bỏ qua các JSON đọc được đã có và dùng lại ảnh đã lưu. Báo cáo cục bộ
+`validation_reports/recovery-attempts.jsonl` có một dòng theo khóa `source:label:source_id`
+cho mỗi bản ghi. Báo cáo ghi URL nguồn, trạng thái, lý do thiếu và thời điểm ghi UTC.
+Các trường `article_saved_at` và `image_saved_at` lấy từ thời điểm sửa tệp cục bộ.
+
+Bộ kiểm thử tổng hợp mô phỏng ngắt collector sau mẫu đầu tiên và xác nhận lần chạy tiếp
+không gửi lại mẫu đó. Số pilot ở trên giữ nguyên. Còn cần xác nhận đầu vào được phép theo
+AFN-001, chạy lại với bộ nguồn đã duyệt và bàn giao manifest riêng cho AFN-003.

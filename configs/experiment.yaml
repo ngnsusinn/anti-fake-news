@@ -1,0 +1,54 @@
+# AFN-004. Review this configuration with Integration and ML before locking it.
+version: 1
+status: proposed
+seed: 42
+input_language: en
+configurations:
+  - text-only
+  - image-only
+  - multimodal
+split:
+  unit: group_id
+  proportions:
+    train: 0.70
+    validation: 0.15
+    test: 0.15
+preprocessing:
+  version: afn-preprocess-v1
+  max_body_words: 1500
+  word_rule: whitespace_after_normalization
+  include_title_in_word_limit: false
+  title_body_separator: "\n"
+selection:
+  split: validation
+  metric: macro_f1
+  metric_labels: [fake, real]
+  positive_label: fake
+  threshold_comparison: greater_than_or_equal
+  c_candidates: [0.01, 0.1, 1.0, 10.0, 100.0]
+  threshold_candidates: [0.30, 0.40, 0.50, 0.60, 0.70]
+  tie_break_order: [closest_threshold_to_0_5, lower_c, lower_threshold]
+  metric_decimal_places: 12
+logistic_regression:
+  solver: liblinear
+  penalty: l2
+  class_weight: balanced
+  max_iter: 1000
+  random_state: 42
+fit_split: train
+refit_on_train_and_validation: false
+# Feature parameters added by ML for AFN-019/020/021 (values from the issues);
+# Integration to confirm together with the rest of this proposed protocol.
+text_features:
+  ngram_range: [1, 2]
+  max_features: 5000
+  min_df: 2
+  sublinear_tf: true
+  norm: l2
+  lowercase: true
+image_features:
+  reference: configs/clip-reference.json
+  batch_size: 16
+fusion:
+  order: [text, image]
+  dtype: float64

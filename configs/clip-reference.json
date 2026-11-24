@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "issue": "AFN-006",
+  "purpose": "Pinned frozen CLIP image encoder reference shared by ML feature extraction (#20) and the Backend model loader (#24/#37).",
+  "encoder": {
+    "repo_id": "openai/clip-vit-base-patch32",
+    "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+    "source": "https://huggingface.co/openai/clip-vit-base-patch32",
+    "files": ["config.json", "preprocessor_config.json", "pytorch_model.bin"],
+    "model_class": "transformers.CLIPModel",
+    "image_processor_class": "transformers.CLIPImageProcessor",
+    "feature_call": "CLIPModel.get_image_features(pixel_values).pooler_output (visual projection applied)",
+    "mode": "inference_only_frozen",
+    "fine_tune": false
+  },
+  "preprocessing": {
+    "shared_module": "backend/app/preprocessing.py",
+    "preprocess_version": "afn-preprocess-v1",
+    "before_processor": "load_image_rgb: EXIF transpose, alpha on white, 8-bit RGB",
+    "processor": "CLIPImageProcessor defaults from pinned preprocessor_config.json (resize shortest side 224, center crop 224, CLIP mean/std)",
+    "after_encoder": "l2_normalize_embeddings: row-wise L2, float32"
+  },
+  "embedding": {
+    "dim": 512,
+    "dtype": "float32",
+    "l2_normalized": true,
+    "dim_source": "measured by scripts/smoke_clip.py; must equal model.config.projection_dim"
+  },
+  "runtime": {
+    "device": "cpu",
+    "torch_dtype": "float32",
+    "cache_env": "HF_HOME",
+    "default_cache_dir": "cache/huggingface",
+    "offline_env": "HF_HUB_OFFLINE=1"
+  },
+  "weights_usage_note": "OpenAI CLIP weights are published for research use; the model card states deployment use cases are out of scope without in-domain evaluation. This project uses them frozen, locally, for a course research demo only. Weights are never committed (see .gitignore)."
+}
