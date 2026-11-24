@@ -19,6 +19,9 @@ data/private/
 raw_data/
 private_data/
 artifacts/
+!/backend/artifacts/
+/backend/artifacts/*
+!/backend/artifacts/metadata.schema.json
 weights/
 checkpoints/
 cache/

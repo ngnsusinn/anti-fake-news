@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AFN-024 / AFN-035 model bundle metadata (draft v1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "configuration", "model_id", "model_version", "status",
+    "is_fixture", "evidence_kind", "created_at", "preprocess_version", "classes",
+    "label_map", "positive_label", "threshold", "threshold_comparison", "feature_dim",
+    "classifier", "text", "image", "fusion", "selection", "training", "versions",
+    "test_predictions_included", "files"
+  ],
+  "properties": {
+    "schema_version": {"const": "afn-model-bundle-v1"},
+    "configuration": {"enum": ["text-only", "image-only", "multimodal"]},
+    "model_id": {"$ref": "#/$defs/nonblank"},
+    "model_version": {"$ref": "#/$defs/nonblank"},
+    "status": {"enum": ["candidate", "frozen"]},
+    "is_fixture": {"type": "boolean"},
+    "evidence_kind": {"enum": ["FIXTURE_SMOKE_NOT_RESEARCH", "VALIDATION_ONLY"]},
+    "created_at": {"type": "string", "format": "date-time"},
+    "preprocess_version": {"const": "afn-preprocess-v1"},
+    "classes": {"enum": [[0, 1], [1, 0]]},
+    "label_map": {"enum": [{"0": "real", "1": "fake"}, {"0": "fake", "1": "real"}]},
+    "positive_label": {"const": "fake"},
+    "threshold": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+    "threshold_comparison": {"const": "greater_than_or_equal"},
+    "feature_dim": {"$ref": "#/$defs/positiveInteger"},
+    "classifier": {
+      "type": "object",
+      "required": ["type", "C", "solver", "penalty", "class_weight", "max_iter", "random_state", "n_iter", "fit_split"],
+      "properties": {
+        "type": {"const": "logistic_regression"},
+        "C": {"type": "number", "exclusiveMinimum": 0},
+        "solver": {"$ref": "#/$defs/nonblank"},
+        "penalty": {"const": "l2"},
+        "class_weight": {"const": "balanced"},
+        "max_iter": {"$ref": "#/$defs/positiveInteger"},
+        "random_state": {"type": "integer"},
+        "n_iter": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}},
+        "fit_split": {"const": "train"}
+      }
+    },
+    "text": {},
+    "image": {},
+    "fusion": {},
+    "selection": {
+      "type": "object",
+      "required": ["split", "metric", "validation_macro_f1", "convergence_warnings_for_C"],
+      "properties": {
+        "split": {"const": "validation"},
+        "metric": {"const": "macro_f1"},
+        "validation_macro_f1": {"type": "number", "minimum": 0, "maximum": 1},
+        "convergence_warnings_for_C": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}}
+      }
+    },
+    "training": {
+      "type": "object",
+      "required": ["seed", "n_train", "n_validation", "train_order_sha256",
+                   "manifest_sha256", "split_sha256", "experiment_config_sha256"],
+      "properties": {
+        "seed": {"type": "integer"},
+        "n_train": {"$ref": "#/$defs/positiveInteger"},
+        "n_validation": {"$ref": "#/$defs/positiveInteger"},
+        "train_order_sha256": {"$ref": "#/$defs/sha256"},
+        "manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "split_sha256": {"$ref": "#/$defs/sha256"},
+        "experiment_config_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "versions": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string"}},
+    "test_predictions_included": {"const": false},
+    "files": {
+      "type": "object",
+      "required": ["classifier/coef.npy", "classifier/intercept.npy"],
+      "additionalProperties": false,
+      "properties": {
+        "classifier/coef.npy": {"$ref": "#/$defs/artifactFile"},
+        "classifier/intercept.npy": {"$ref": "#/$defs/artifactFile"},
+        "text/vocabulary.json": {"$ref": "#/$defs/artifactFile"},
+        "text/idf.npy": {"$ref": "#/$defs/artifactFile"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"is_fixture": {"const": true}}},
+      "then": {"properties": {"evidence_kind": {"const": "FIXTURE_SMOKE_NOT_RESEARCH"}}},
+      "else": {"properties": {"evidence_kind": {"const": "VALIDATION_ONLY"}}}
+    },
+    {
+      "if": {"properties": {"configuration": {"const": "image-only"}}},
+      "then": {"properties": {"text": {"type": "null"}, "files": {"maxProperties": 2}}},
+      "else": {"properties": {
+        "text": {"$ref": "#/$defs/textFeatures"},
+        "files": {"required": ["text/vocabulary.json", "text/idf.npy"]}
+      }}
+    },
+    {
+      "if": {"properties": {"configuration": {"const": "text-only"}}},
+      "then": {"properties": {"image": {"type": "null"}}},
+      "else": {"properties": {"image": {"$ref": "#/$defs/imageFeatures"}}}
+    },
+    {
+      "if": {"properties": {"configuration": {"const": "multimodal"}}},
+      "then": {"properties": {"fusion": {"const": {"order": ["text", "image"], "dtype": "float64"}}}},
+      "else": {"properties": {"fusion": {"type": "null"}}}
+    }
+  ],
+  "$defs": {
+    "nonblank": {"type": "string", "pattern": "\\S"},
+    "positiveInteger": {"type": "integer", "minimum": 1},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "artifactFile": {
+      "type": "object",
+      "required": ["sha256", "bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 67108864}
+      }
+    },
+    "textFeatures": {
+      "type": "object",
+      "required": ["dim", "ngram_range", "lowercase", "token_pattern", "sublinear_tf", "norm", "fit_split"],
+      "properties": {
+        "dim": {"$ref": "#/$defs/positiveInteger"},
+        "ngram_range": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/positiveInteger"}},
+        "lowercase": {"type": "boolean"},
+        "token_pattern": {"const": "(?u)\\b\\w\\w+\\b"},
+        "sublinear_tf": {"type": "boolean"},
+        "norm": {"const": "l2"},
+        "fit_split": {"const": "train"}
+      }
+    },
+    "imageFeatures": {
+      "type": "object",
+      "required": ["dim", "encoder", "packaged", "l2_normalized"],
+      "properties": {
+        "dim": {"$ref": "#/$defs/positiveInteger"},
+        "packaged": {"const": false},
+        "l2_normalized": {"const": true},
+        "encoder": {
+          "type": "object",
+          "required": ["repo_id", "revision", "processor_config_sha256", "preprocess_version", "dtype"],
+          "properties": {
+            "repo_id": {"$ref": "#/$defs/nonblank"},
+            "revision": {"$ref": "#/$defs/nonblank"},
+            "processor_config_sha256": {"$ref": "#/$defs/sha256"},
+            "preprocess_version": {"const": "afn-preprocess-v1"},
+            "dtype": {"const": "float32"}
+          }
+        }
+      }
+    }
+  }
+}

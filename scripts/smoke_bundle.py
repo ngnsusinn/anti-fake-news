@@ -5,7 +5,7 @@ Request-shaped inputs (title, body, encoded image bytes) ->
 
 Uses synthetic inputs only; prints timings measured after model load.
 
-    .venv/bin/python scripts/smoke_bundle.py --bundle backend/artifacts/multimodal --offline
+    .venv/bin/python scripts/smoke_bundle.py --bundle cache/ml-fixture-bundles/multimodal --offline
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ def synthetic_png(colour: tuple[int, int, int]) -> bytes:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--bundle", type=Path, default=REPO_ROOT / "backend" / "artifacts" / "multimodal")
+    parser.add_argument("--bundle", type=Path, default=REPO_ROOT / "cache" / "ml-fixture-bundles" / "multimodal")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--repeat", type=int, default=20)
     args = parser.parse_args()

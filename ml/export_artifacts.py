@@ -12,7 +12,7 @@ scikit-learn scores/labels on Validation (export round-trip parity).
     .venv/bin/python -m ml.export_artifacts --manifest M.jsonl --split S.csv --image-root DIR --offline
 
 Bundles are ``status: candidate`` until #49 freezes one. Test is never loaded
-and no predictions are stored. Candidate output defaults to ``backend/artifacts``;
+and no predictions are stored. Candidate output defaults to ``backend/artifacts/candidates``;
 fixture output defaults to ``cache/ml-fixture-bundles``.
 """
 
@@ -53,7 +53,7 @@ from ml.train_image import build_image_features
 from ml.train_multimodal import fuse_features
 from ml.train_text import build_text_features, model_texts
 
-DEFAULT_OUT = REPO_ROOT / "backend" / "artifacts"
+DEFAULT_OUT = REPO_ROOT / "backend" / "artifacts" / "candidates"
 DEFAULT_FIXTURE_OUT = REPO_ROOT / "cache" / "ml-fixture-bundles"
 LABEL_MAP = {"0": "real", "1": "fake"}  # labels_to_y: fake -> 1
 PARITY_ATOL = 1e-9

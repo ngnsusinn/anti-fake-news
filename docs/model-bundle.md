@@ -7,7 +7,9 @@ viết loader và predictor. Gói ứng viên thật được xuất bằng cùn
 
 ## 1. Tạo gói trên máy bạn
 
-Gói không commit (`.gitignore` chặn `artifacts/`). Mỗi người tự sinh, mất khoảng 10 giây, cần cache CLIP từ AFN-006:
+Bundle sinh ra được Git bỏ qua. Schema dùng chung được theo dõi tại
+[`backend/artifacts/metadata.schema.json`](../backend/artifacts/metadata.schema.json).
+Để tự tạo bundle fixture, dùng cache CLIP từ AFN-006:
 
 ```sh
 .venv/bin/python -m ml.export_artifacts --fixture --offline
@@ -23,7 +25,7 @@ cache/ml-fixture-bundles/
   text_only/  image_only/  multimodal/
 ```
 
-Chế độ xuất candidate thật mặc định dùng `backend/artifacts/`. Chỉ định thư mục mới bằng
+Chế độ xuất candidate thật mặc định dùng `backend/artifacts/candidates/`. Chỉ định thư mục mới bằng
 `--out` cho mỗi lần xuất tiếp theo. Bộ xuất chỉ đưa cả ba gói vào thư mục đích sau khi
 kiểm tra parity xong, và từ chối ghi đè thư mục đã tồn tại.
 
@@ -110,7 +112,7 @@ Thông điệp của `BundleError` không chứa đường dẫn hay nội dung 
 
 | Việc | Owner |
 | --- | --- |
-| Duyệt định dạng; chốt `metadata.schema.json` cho #24. Lưu ý `.gitignore` có `artifacts/` sẽ chặn luôn file schema nếu đặt ở `backend/artifacts/` | Integration (#24) |
+| Duyệt schema đề xuất bằng fixture và chốt hợp đồng cho loader | Integration (#24) |
 | Chốt nơi đặt `ClipImageEncoder` cho backend | Integration (#24) |
 | Xuất gói ứng viên thật từ split đã audit | ML (#35, sau #34) |
 | Parity offline–online qua predictor thật | ML (#36) + Backend (#37) |
