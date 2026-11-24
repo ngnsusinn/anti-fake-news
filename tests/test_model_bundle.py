@@ -78,6 +78,32 @@ def test_export_refuses_test_rows(ml_fixture, ml_config, fake_encoder, tmp_path)
         export_all(unlocked, ml_config, fake_encoder, tmp_path / "x", inputs={})
 
 
+def test_export_preserves_existing_bundle(exported, dataset, ml_config, fake_encoder):
+    out, _ = exported
+    bundle_dir = out / "text_only"
+    metadata = (bundle_dir / "metadata.json").read_bytes()
+    with pytest.raises(FileExistsError, match="new export directory"):
+        export_all(dataset, ml_config, fake_encoder, out, inputs={})
+    assert (bundle_dir / "metadata.json").read_bytes() == metadata
+    assert load_bundle(bundle_dir).model_version
+
+
+def test_failed_export_does_not_publish_partial_bundles(dataset, ml_config, fake_encoder, tmp_path, monkeypatch):
+    out = tmp_path / "artifacts"
+    original = load_bundle
+
+    def fail_after_first_bundle(path, *, expected_configuration):
+        if expected_configuration == "image-only":
+            raise BundleError("simulated second bundle validation failure")
+        return original(path, expected_configuration=expected_configuration)
+
+    monkeypatch.setattr("ml.export_artifacts.load_bundle", fail_after_first_bundle)
+    with pytest.raises(BundleError, match="simulated"):
+        export_all(dataset, ml_config, fake_encoder, out, inputs={})
+    assert not out.exists()
+    assert list(tmp_path.glob(".afn-export-*")) == []
+
+
 def test_feature_dims_and_fusion_order(exported, fake_encoder):
     out, report = exported
     text_dim = report["bundles"]["text-only"]["feature_dim"]
@@ -166,8 +192,14 @@ def test_pickled_array_rejected_even_with_matching_checksum(exported):
     lambda m: m["fusion"].update(order=["image", "text"]),
     lambda m: m["image"].update(packaged=True),
     lambda m: m["files"].pop("text/idf.npy"),
+    lambda m: m.pop("feature_dim"),
+    lambda m: m.update(text=[]),
+    lambda m: m["text"].pop("ngram_range"),
+    lambda m: m["image"].update(encoder={"revision": "incomplete"}),
+    lambda m: m["files"].update({"classifier/coef.npy": []}),
 ], ids=["thr>1", "thr-bool", "preprocess", "schema", "label_map", "test-preds", "status",
-        "empty-version", "dim", "fusion-order", "packaged", "file-list"])
+        "empty-version", "dim", "fusion-order", "packaged", "file-list",
+        "missing-dim", "text-array", "missing-ngrams", "incomplete-encoder", "invalid-file-entry"])
 def test_bad_metadata_rejected(exported, mutate):
     out, _ = exported
     _rewrite_meta(out / "multimodal", mutate)

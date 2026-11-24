@@ -178,15 +178,20 @@ def _fail(reason: str) -> BundleError:
 
 
 def _read_verified(root: Path, rel: str, expected: dict[str, Any]) -> bytes:
-    path = (root / rel).resolve()
-    if root.resolve() not in path.parents:
-        raise _fail("file outside bundle")
-    if not path.is_file():
-        raise _fail("listed file missing")
-    data = path.read_bytes()
-    if len(data) > MAX_ARRAY_BYTES or len(data) != expected.get("bytes"):
+    size = expected["bytes"]
+    try:
+        path = (root / rel).resolve()
+        if root.resolve() not in path.parents:
+            raise _fail("file outside bundle")
+        if not path.is_file():
+            raise _fail("listed file missing")
+        with path.open("rb") as handle:
+            data = handle.read(size + 1)
+    except OSError as exc:
+        raise _fail("listed file unreadable") from exc
+    if len(data) != size:
         raise _fail("file size mismatch")
-    if sha256_bytes(data) != expected.get("sha256"):
+    if sha256_bytes(data) != expected["sha256"]:
         raise _fail("checksum mismatch")
     return data
 
@@ -196,11 +201,32 @@ def _load_npy(data: bytes) -> np.ndarray:
 
     try:
         arr = np.load(io.BytesIO(data), allow_pickle=False)
-    except ValueError as exc:
+    except (ValueError, EOFError) as exc:
         raise _fail("array is not a plain .npy") from exc
+    if isinstance(arr, np.lib.npyio.NpzFile):
+        arr.close()
+        raise _fail("array is not a plain .npy")
     if arr.dtype != FEATURE_DTYPE or not np.all(np.isfinite(arr)):
         raise _fail("array dtype/finiteness")
     return arr
+
+
+def _positive_int(value: Any) -> bool:
+    return type(value) is int and value > 0
+
+
+def _is_sha256(value: Any) -> bool:
+    return isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value)
+
+
+def _read_json_object(path: Path, name: str) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise _fail(f"{name} unreadable") from exc
+    if not isinstance(value, dict):
+        raise _fail(f"{name} is not an object")
+    return value
 
 
 def validate_metadata(meta: dict[str, Any]) -> None:
@@ -220,44 +246,60 @@ def validate_metadata(meta: dict[str, Any]) -> None:
     if meta.get("preprocess_version") != PREPROCESS_VERSION:
         raise _fail("preprocess_version differs from this service")
     classes, label_map = meta.get("classes"), meta.get("label_map")
-    if (not isinstance(classes, list) or len(classes) != 2 or not isinstance(label_map, dict)
-            or sorted(label_map.get(str(c)) or "" for c in classes) != ["fake", "real"]):
+    if (not isinstance(classes, list) or len(classes) != 2
+            or any(type(c) is not int for c in classes) or set(classes) != {0, 1}
+            or label_map not in ({"0": "real", "1": "fake"}, {"0": "fake", "1": "real"})):
         raise _fail("classes/label_map")
     if meta.get("positive_label") != "fake" or meta.get("threshold_comparison") != "greater_than_or_equal":
         raise _fail("positive label / threshold rule")
     thr = meta.get("threshold")
     if not isinstance(thr, (int, float)) or isinstance(thr, bool) or not (0.0 < thr < 1.0) or not math.isfinite(thr):
         raise _fail("threshold")
+    if not _positive_int(meta.get("feature_dim")):
+        raise _fail("feature_dim")
     want_text, want_image = cfg in ("text-only", "multimodal"), cfg in ("image-only", "multimodal")
     if (meta.get("text") is not None) != want_text or (meta.get("image") is not None) != want_image:
         raise _fail("feature blocks do not match configuration")
     if want_text:
         text = meta["text"]
-        if text.get("token_pattern") != TOKEN_PATTERN or text.get("norm") != "l2":
+        if not isinstance(text, dict) or not _positive_int(text.get("dim")):
+            raise _fail("text feature block")
+        ngrams = text.get("ngram_range")
+        if (text.get("token_pattern") != TOKEN_PATTERN or text.get("norm") != "l2"
+                or not isinstance(text.get("lowercase"), bool)
+                or not isinstance(text.get("sublinear_tf"), bool)
+                or not isinstance(ngrams, list) or len(ngrams) != 2
+                or not all(_positive_int(n) for n in ngrams) or ngrams[0] > ngrams[1]):
             raise _fail("text vectoriser settings")
     if want_image:
-        enc = meta["image"].get("encoder") or {}
-        if meta["image"].get("packaged") is not False or not enc.get("revision"):
+        img = meta["image"]
+        if not isinstance(img, dict) or not _positive_int(img.get("dim")):
+            raise _fail("image feature block")
+        enc = img.get("encoder")
+        if (not isinstance(enc, dict) or img.get("packaged") is not False
+                or img.get("l2_normalized") is not True
+                or any(not isinstance(enc.get(k), str) or not enc[k].strip() for k in ("repo_id", "revision"))
+                or not _is_sha256(enc.get("processor_config_sha256"))
+                or enc.get("preprocess_version") != PREPROCESS_VERSION or enc.get("dtype") != "float32"):
             raise _fail("image encoder reference")
     fusion = meta.get("fusion")
     if cfg == "multimodal":
-        if not fusion or fusion.get("order") != ["text", "image"] or fusion.get("dtype") != "float64":
+        if not isinstance(fusion, dict) or fusion.get("order") != ["text", "image"] or fusion.get("dtype") != "float64":
             raise _fail("fusion")
     elif fusion is not None:
         raise _fail("fusion only allowed for multimodal")
     if not isinstance(meta.get("files"), dict) or not meta["files"]:
         raise _fail("files")
+    for entry in meta["files"].values():
+        if (not isinstance(entry, dict) or not _positive_int(entry.get("bytes"))
+                or entry["bytes"] > MAX_ARRAY_BYTES or not _is_sha256(entry.get("sha256"))):
+            raise _fail("file size or checksum metadata")
 
 
 def load_bundle(bundle_dir: Path | str, *, expected_configuration: str | None = None) -> ModelBundle:
     """Load and fully validate one bundle; raises ``BundleError`` on any problem."""
     root = Path(bundle_dir)
-    try:
-        meta = json.loads((root / "metadata.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        raise _fail("metadata.json unreadable") from exc
-    if not isinstance(meta, dict):
-        raise _fail("metadata.json is not an object")
+    meta = _read_json_object(root / "metadata.json", "metadata.json")
     validate_metadata(meta)
     if expected_configuration and meta["configuration"] != expected_configuration:
         raise _fail("unexpected configuration")
@@ -270,7 +312,7 @@ def load_bundle(bundle_dir: Path | str, *, expected_configuration: str | None = 
 
     coef = _load_npy(_read_verified(root, "classifier/coef.npy", files["classifier/coef.npy"]))
     intercept = _load_npy(_read_verified(root, "classifier/intercept.npy", files["classifier/intercept.npy"]))
-    n_features = int(meta["feature_dim"])
+    n_features = meta["feature_dim"]
     if coef.shape != (1, n_features) or intercept.shape != (1,):
         raise _fail("classifier shape")
 
@@ -283,12 +325,13 @@ def load_bundle(bundle_dir: Path | str, *, expected_configuration: str | None = 
         except ValueError as exc:
             raise _fail("vocabulary unreadable") from exc
         idf = _load_npy(_read_verified(root, "text/idf.npy", files["text/idf.npy"]))
-        text_dim = int(meta["text"]["dim"])
+        text_dim = meta["text"]["dim"]
         if (not isinstance(vocabulary, dict) or len(vocabulary) != text_dim
+                or any(type(index) is not int for index in vocabulary.values())
                 or sorted(vocabulary.values()) != list(range(text_dim))
                 or idf.shape != (text_dim,) or np.any(idf <= 0)):
             raise _fail("text vocabulary/idf")
-    image_dim = int(meta["image"]["dim"]) if meta["image"] is not None else 0
+    image_dim = meta["image"]["dim"] if meta["image"] is not None else 0
     if text_dim + image_dim != n_features:
         raise _fail("feature_dim != text_dim + image_dim")
     return ModelBundle(meta, coef, intercept, vocabulary, idf)
@@ -307,7 +350,10 @@ def check_encoder_identity(bundle: ModelBundle, identity: dict[str, Any], dim: i
 
 
 def load_label_map(artifacts_root: Path | str) -> dict[str, Any]:
-    data = json.loads((Path(artifacts_root) / LABEL_MAP_FILE).read_text(encoding="utf-8"))
+    data = _read_json_object(Path(artifacts_root) / LABEL_MAP_FILE, LABEL_MAP_FILE)
     if data.get("schema_version") != BUNDLE_SCHEMA_VERSION:
         raise _fail("label_map schema_version")
+    if (data.get("classes") not in ({"0": "real", "1": "fake"}, {"0": "fake", "1": "real"})
+            or data.get("positive_label") != "fake"):
+        raise _fail("label_map classes or positive label")
     return data

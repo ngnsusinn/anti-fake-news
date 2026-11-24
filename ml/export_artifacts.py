@@ -12,17 +12,17 @@ scikit-learn scores/labels on Validation (export round-trip parity).
     .venv/bin/python -m ml.export_artifacts --manifest M.jsonl --split S.csv --image-root DIR --offline
 
 Bundles are ``status: candidate`` until #49 freezes one. Test is never loaded
-and no predictions are stored. Output defaults to ``backend/artifacts``
-(git-ignored).
+and no predictions are stored. Candidate output defaults to ``backend/artifacts``;
+fixture output defaults to ``cache/ml-fixture-bundles``.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 import numpy as np
@@ -54,6 +54,7 @@ from ml.train_multimodal import fuse_features
 from ml.train_text import build_text_features, model_texts
 
 DEFAULT_OUT = REPO_ROOT / "backend" / "artifacts"
+DEFAULT_FIXTURE_OUT = REPO_ROOT / "cache" / "ml-fixture-bundles"
 LABEL_MAP = {"0": "real", "1": "fake"}  # labels_to_y: fake -> 1
 PARITY_ATOL = 1e-9
 
@@ -80,8 +81,6 @@ def write_bundle(out_root: Path, configuration: str, tune, *, cfg: dict[str, Any
     if [int(c) for c in model.classes_] != [0, 1]:
         raise RuntimeError("unexpected classifier classes_")
     bundle = out_root / BUNDLE_DIRS[configuration]
-    if bundle.exists():
-        shutil.rmtree(bundle)
     bundle.mkdir(parents=True)
     files: dict[str, dict] = {}
     _write_npy(bundle, "classifier/coef.npy", model.coef_.reshape(1, -1), files)
@@ -157,6 +156,18 @@ def export_all(dataset: Dataset, cfg: dict[str, Any], encoder: ImageEncoder, out
                cache: EmbeddingCache | None = None, inputs: dict[str, str]) -> dict[str, Any]:
     if "test" in dataset.splits:
         raise PermissionError("export must not receive Test rows")
+    if out_root.exists():
+        raise FileExistsError(f"choose a new export directory: {out_root}")
+    out_root.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(prefix=".afn-export-", dir=out_root.parent) as temporary:
+        staged = Path(temporary) / "bundles"
+        report = _export_and_validate(dataset, cfg, encoder, staged, cache=cache, inputs=inputs)
+        staged.rename(out_root)
+    return report
+
+
+def _export_and_validate(dataset: Dataset, cfg: dict[str, Any], encoder: ImageEncoder, out_root: Path, *,
+                         cache: EmbeddingCache | None, inputs: dict[str, str]) -> dict[str, Any]:
     train, val = dataset.rows("train"), dataset.rows("validation")
     positive = cfg["selection"]["positive_label"]
     y_train, y_val = labels_to_y(train, positive), labels_to_y(val, positive)
@@ -218,11 +229,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--split", type=Path)
     parser.add_argument("--image-root", type=Path, default=None)
     parser.add_argument("--config", type=Path, default=None)
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--out", type=Path, help="new export directory")
     parser.add_argument("--cache-dir", type=Path, default=DEFAULT_EMBEDDING_CACHE)
     parser.add_argument("--hf-cache-dir", type=Path, default=None)
     parser.add_argument("--offline", action="store_true")
     args = parser.parse_args(argv)
+    out_root = args.out if args.out is not None else (DEFAULT_FIXTURE_OUT if args.fixture else DEFAULT_OUT)
+    if out_root.exists():
+        parser.error(f"choose a new --out directory: {out_root}")
 
     if args.fixture:
         from ml.fixtures import write_synthetic_dataset
@@ -240,10 +254,10 @@ def main(argv: list[str] | None = None) -> int:
                                cache_dir=args.hf_cache_dir, offline=args.offline)
     inputs = {"manifest_sha256": dataset.manifest_sha256, "split_sha256": dataset.split_sha256,
               "experiment_config_sha256": sha256_file(config_path)}
-    report = export_all(dataset, cfg, encoder, args.out,
+    report = export_all(dataset, cfg, encoder, out_root,
                         cache=EmbeddingCache(args.cache_dir, encoder.dim), inputs=inputs)
     kind = "FIXTURE (not research)" if report["is_fixture"] else "candidate"
-    print(f"[{kind}] bundles written to {args.out}")
+    print(f"[{kind}] bundles written to {out_root}")
     for name, b in report["bundles"].items():
         print(f"  {name:11s} {b['model_version']}  dim={b['feature_dim']}  thr={b['threshold']:.2f}  "
               f"parity max|diff|={b['parity']['max_abs_score_diff']:.2e} labels_equal={b['parity']['labels_equal']}")

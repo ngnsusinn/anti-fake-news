@@ -11,19 +11,24 @@ Gói không commit (`.gitignore` chặn `artifacts/`). Mỗi người tự sinh,
 
 ```sh
 .venv/bin/python -m ml.export_artifacts --fixture --offline
-.venv/bin/python scripts/smoke_bundle.py --bundle backend/artifacts/multimodal --offline
+.venv/bin/python scripts/smoke_bundle.py --bundle cache/ml-fixture-bundles/multimodal --offline
 ```
 
 Kết quả:
 
 ```
-backend/artifacts/
+cache/ml-fixture-bundles/
   label_map.json          {"0": "real", "1": "fake"}, positive_label fake
   export-report.json      parity khi xuất (Validation), model_version từng gói
   text_only/  image_only/  multimodal/
 ```
 
-Demo dùng `multimodal`, nên đặt trong `.env`: `AFN_MODEL_ARTIFACT_PATH=backend/artifacts/multimodal`.
+Chế độ xuất candidate thật mặc định dùng `backend/artifacts/`. Chỉ định thư mục mới bằng
+`--out` cho mỗi lần xuất tiếp theo. Bộ xuất chỉ đưa cả ba gói vào thư mục đích sau khi
+kiểm tra parity xong, và từ chối ghi đè thư mục đã tồn tại.
+
+Khi thử fixture cho demo, đặt `AFN_MODEL_ARTIFACT_PATH=cache/ml-fixture-bundles/multimodal`
+trong `.env`. Với candidate thật, trỏ cấu hình tới thư mục `multimodal` của lần xuất đã kiểm định.
 
 ## 2. Nội dung một gói
 
@@ -90,9 +95,10 @@ Thông điệp của `BundleError` không chứa đường dẫn hay nội dung 
 
 - **Parity khi xuất:** nạp lại gói từ đĩa, tính lại điểm Validation từ text thô và embedding, so với
   `predict_proba` của scikit-learn: sai lệch tối đa 0,0, nhãn trùng 100% cho cả 3 gói (ngưỡng cho phép 1e-9).
-- `tests/test_model_bundle.py` (25 test): TF-IDF của gói khớp `TfidfVectorizer.transform` trên text chưa thấy;
+- `tests/test_model_bundle.py`: TF-IDF của gói khớp `TfidfVectorizer.transform` trên text chưa thấy;
   `text_truncated` đúng; gói bị sửa coef, nhét pickle, sai threshold/label_map/`preprocess_version`/thứ tự ghép,
   thiếu file, lệch encoder đều bị từ chối; thông điệp lỗi không lộ đường dẫn; export từ chối dữ liệu có Test.
+  Kiểm thử hồi quy xác nhận metadata thiếu hoặc sai kiểu báo `BundleError` và lần xuất lỗi giữ nguyên bundle đã dùng.
 - `scripts/smoke_bundle.py` (macOS M1, CPU, CLIP thật, input tổng hợp, sau khi nạp model):
 
 | Gói | Nạp gói + CLIP | 1 request (trung vị / max, 20 lượt) |
