@@ -1,8 +1,8 @@
 # AFN-036 · Tương đương suy luận offline–online
 
-Trạng thái: **đã có harness, chỉ kiểm trên fixture**. Nhãn bằng chứng là `FIXTURE_SMOKE_NOT_RESEARCH`.
-Muốn nghiệm thu cần: gói ứng viên thật từ #35 (sau #34), predictor thật từ #37, và Backend review.
-Báo cáo này **không** phải kết quả mô hình.
+Trạng thái: **harness đã chạy trên gói ứng viên thật (#35, dataset ml-v2) trên Validation: PASS**.
+Predictor online vẫn là `ReferenceBundlePredictor` (tham chiếu của harness). Muốn nghiệm thu cần predictor thật
+từ #37, đo trên máy demo, và Backend review. Báo cáo này kiểm tra tính tương đương, **không** phải chất lượng mô hình.
 
 ## 1. So sánh hai đường chạy nào
 
@@ -46,6 +46,26 @@ Offline encode cả lô 8 ảnh, online encode từng ảnh một (batch 1). Tr�
 Ngưỡng `1e-6` để dư cho trường hợp CPU hoặc thư viện khác cho sai lệch float32 nhỏ.
 Phải đo lại trên máy demo Windows.
 
+## 3b. Kết quả trên gói ứng viên thật (25/11/2026, macOS arm64, Python 3.14.7)
+
+Gói `backend/artifacts/candidates-v2` (#35, `is_fixture: false`), 32 mẫu Validation của dataset ml-v2 (#34),
+CLIP thật `openai/clip-vit-base-patch32@3d74acf9`, `afn-preprocess-v1`, atol `1e-6`, predictor
+`ReferenceBundlePredictor` (**không phải #37**). Test không được nạp. `evidence_kind: VALIDATION_ONLY`.
+
+| Cấu hình | model_version | n | max \|Δscore\| | Nhãn | Truncated | Model ID/version | Lỗi | Kết quả |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| text-only | `text-only-20261125-275718e3163b` | 32 | 0.00e+00 | trùng | trùng | trùng | 0 | PASS |
+| image-only | `image-only-20261125-cd863cbaabf5` | 32 | 0.00e+00 | trùng | trùng | trùng | 0 | PASS |
+| multimodal | `multimodal-20261125-105d5f14e79a` | 32 | 0.00e+00 | trùng | trùng | trùng | 0 | PASS |
+
+Đầu vào là ảnh PNG thật đã thu hồi (không phải ảnh tổng hợp); 1/32 mẫu có body bị cắt ở 1.500 từ. Lệnh chạy:
+
+```sh
+H=data/private/ml-v2/train-validation
+.venv/bin/python -m ml.inference_parity --bundle-root backend/artifacts/candidates-v2 --manifest $H/manifest.jsonl \
+    --split $H/split.csv --image-root data --offline --out cache/parity/real-v2.json
+```
+
 ## 4. Test (`tests/test_inference_parity.py`)
 
 24 test: 23 chạy với `FakeImageEncoder` (test double, không phải CLIP), 1 test CLIP thật chỉ chạy khi đặt `AFN_CLIP_TESTS=1`.
@@ -88,7 +108,7 @@ Phải đo lại trên máy demo Windows.
 
 | Việc | Owner | Phụ thuộc |
 | --- | --- | --- |
-| Chạy harness với gói ứng viên thật trên Validation | ML | #34 → #35 (dataset cần #17/#18/#29) |
+| ~~Chạy harness với gói ứng viên thật trên Validation~~ (xong, mục 3b) | ML | #34, #35 (chờ DATA/QA xác nhận ml-v2) |
 | Thay `ReferenceBundlePredictor` bằng predictor thật | Backend (Phuc1232) | #24 loader, #37 |
 | Đo lại trên máy demo Windows, ghi kết quả vào báo cáo này | ML + Backend | máy demo |
 | Review | BACKEND | — |
