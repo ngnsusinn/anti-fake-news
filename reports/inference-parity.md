@@ -48,7 +48,7 @@ Phải đo lại trên máy demo Windows.
 
 ## 4. Test (`tests/test_inference_parity.py`)
 
-22 test: 21 chạy với `FakeImageEncoder` (test double, không phải CLIP), 1 test CLIP thật chỉ chạy khi đặt `AFN_CLIP_TESTS=1`.
+24 test: 23 chạy với `FakeImageEncoder` (test double, không phải CLIP), 1 test CLIP thật chỉ chạy khi đặt `AFN_CLIP_TESTS=1`.
 
 - **PASS mong đợi.** Ba cấu hình trên Validation, và các ca biên dạng request:
   - JPEG có EXIF orientation 6 (ảnh không vuông);
@@ -57,7 +57,7 @@ Phải đo lại trên máy demo Windows.
   - body 2.400 từ (bị cắt);
   - text có khoảng trắng hoặc ký tự vô hình;
   - title rỗng.
-  
+
   Ngoài ra còn kiểm: đảo `label_map` thì `fake_score` phải bằng `1 − P(class 1)`, và đường offline sklearn khớp `ModelBundle` đến `1e-12`.
 - **Mutant phải FAIL.** Đây là các predictor cố tình sai, dùng để chứng minh harness phát hiện được lệch:
   - bỏ qua EXIF và nền trắng cho alpha;

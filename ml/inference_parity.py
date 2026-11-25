@@ -229,7 +229,11 @@ def run_parity(bundle: ModelBundle, predictor: Predictor, samples: Sequence[Pari
     for sample, s, lab, tr in zip(samples, off_scores, off_labels, off_trunc, strict=True):
         case = CaseResult(sample.sample_id, float(s), lab, bool(tr))
         try:
-            result = PredictionResult.model_validate(predictor.predict(request_for(sample)))
+            output = predictor.predict(request_for(sample))
+            if isinstance(output, PredictionResult):
+                # Revalidate fields because model_copy updates can bypass validation.
+                output = dict(output)
+            result = PredictionResult.model_validate(output)
         except Exception as exc:  # noqa: BLE001 - every failure is a parity failure
             case.error = type(exc).__name__
             case.problems.append("predictor_error")
@@ -344,7 +348,9 @@ def main(argv: list[str] | None = None) -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(text + "\n", encoding="utf-8")
     for name, r in reports.items():
-        print(f"{name:11s} n={r['n']} max|diff|={r['max_abs_score_diff']:.2e} labels_equal={r['labels_equal']} "
+        max_diff = r["max_abs_score_diff"]
+        formatted_diff = "n/a" if max_diff is None else f"{max_diff:.2e}"
+        print(f"{name:11s} n={r['n']} max|diff|={formatted_diff} labels_equal={r['labels_equal']} "
               f"truncated_equal={r['truncated_equal']} identity_equal={r['identity_equal']} "
               f"errors={r['n_errors']} -> {'PASS' if r['passed'] else 'FAIL'}  [{r['evidence_kind']}]")
     return 0 if summary["passed"] else 1

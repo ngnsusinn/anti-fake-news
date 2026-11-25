@@ -25,6 +25,7 @@ from ml.inference_parity import (
     ParityError,
     ParitySample,
     ReferenceBundlePredictor,
+    main,
     request_for,
     run_parity,
     samples_from_dataset,
@@ -227,6 +228,12 @@ class InvalidOutputPredictor:
                 "text_truncated": False}
 
 
+class InvalidTypedOutputPredictor(ReferenceBundlePredictor):
+    def predict(self, inputs):
+        result = super().predict(inputs)
+        return result.model_copy(update={"text_truncated": int(result.text_truncated)})
+
+
 def test_mutant_ignoring_exif_and_alpha_fails(bundles, fake_encoder):
     bundle = _load(bundles, "image-only")
     report = _parity(bundle, NoExifPredictor(bundle, fake_encoder), EDGE_SAMPLES[:3], fake_encoder)
@@ -277,6 +284,28 @@ def test_failing_model_is_never_replaced_by_a_score(bundles, val_samples, predic
         assert failure["online_score"] is None and failure["online_label"] is None
         assert failure["problems"] == ["predictor_error"]
     assert "model file missing" not in json.dumps(report.to_dict())  # no exception text leaks
+
+
+def test_invalid_fields_in_prediction_result_fail_schema_validation(bundles, val_samples):
+    bundle = _load(bundles, "text-only")
+    report = run_parity(bundle, InvalidTypedOutputPredictor(bundle, None), val_samples, encoder=None)
+    assert not report.passed
+    assert report.n_errors == len(val_samples)
+    assert all(failure["problems"] == ["predictor_error"] for failure in report.failures)
+
+
+def test_cli_reports_failure_when_no_online_scores_are_available(fake_encoder, monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr("ml.extract_embeddings.ClipImageEncoder", lambda *args, **kwargs: fake_encoder)
+    monkeypatch.setattr(
+        "ml.inference_parity.resolve_factory", lambda spec: lambda *_: CrashingPredictor()
+    )
+    output = tmp_path / "parity.json"
+
+    assert main(["--fixture", "--configurations", "text-only", "--out", str(output)]) == 1
+    assert "max|diff|=n/a" in capsys.readouterr().out
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert not report["passed"]
+    assert report["reports"]["text-only"]["max_abs_score_diff"] is None
 
 
 # ------------------------------------------------- refusals / mismatches
