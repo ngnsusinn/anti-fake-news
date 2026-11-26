@@ -14,7 +14,7 @@ import pytest
 from app.model_bundle import BUNDLE_DIRS, load_bundle
 from ml.common import DEFAULT_EXPERIMENT_CONFIG, load_dataset, sha256_file
 from ml.evaluate_test import (
-    METRICS_FILE, PREDICTIONS_FILE, EvaluationError, run,
+    METRICS_FILE, PREDICTIONS_FILE, RUN_LOCK, EvaluationError, run,
 )
 from ml.export_artifacts import export_all
 from ml.freeze import FreezeError, collect, sign, write_record
@@ -63,7 +63,8 @@ def setup(tmp_path, ml_fixture, ml_config, fake_encoder):
     test_manifest.parent.mkdir()
     lines = [line for line in open(ml_fixture["unlocked_manifest"]) if json.loads(line)["sample_id"] in test_ids]
     test_manifest.write_text("".join(lines))
-    args = dict(freeze=freeze, bundle_root=bundles, locked_split=ml_fixture["split"], manifest=test_manifest,
+    args = dict(freeze=freeze, bundle_root=bundles, locked_manifest=ml_fixture["manifest"],
+                locked_split=ml_fixture["split"], manifest=test_manifest,
                 split=ml_fixture["unlocked_split"], image_root=ml_fixture["image_root"],
                 out_dir=tmp_path / "reports", encoder=fake_encoder, root=root)
     return args, record, test_ids
@@ -130,15 +131,61 @@ def test_nothing_is_fit_during_evaluation(setup, monkeypatch):
     run(**args)
 
 
-def test_second_run_needs_a_recorded_reason(setup):
+def test_second_run_needs_a_recorded_reason(setup, monkeypatch):
     args, record, _ = setup
     _sign(args, record)
     run(**args)
-    with pytest.raises(EvaluationError, match="one run"):
-        run(**args)
+    with monkeypatch.context() as guard:
+        guard.setattr("ml.evaluate_test.load_test_rows",
+                      lambda *a, **k: pytest.fail("rerun read Test without authorization"))
+        with pytest.raises(EvaluationError, match="one run"):
+            run(**args, rerun_reason=" ")
     run(**args, rerun_reason="process killed while writing outputs")
     runs = json.loads((args["out_dir"] / METRICS_FILE).read_text())["runs"]
     assert [r["reason"] for r in runs] == ["first run", "process killed while writing outputs"]
+
+
+def test_failed_scoring_needs_a_reason_to_retry(setup, monkeypatch):
+    args, record, _ = setup
+    _sign(args, record)
+
+    def fail_scoring(*args, **kwargs):
+        raise RuntimeError("encoder failed")
+
+    with monkeypatch.context() as scoring:
+        scoring.setattr("ml.evaluate_test.score", fail_scoring)
+        with pytest.raises(RuntimeError, match="encoder failed"):
+            run(**args)
+    assert not (args["out_dir"] / METRICS_FILE).exists()
+    with pytest.raises(EvaluationError, match="one run"):
+        run(**args)
+    metrics = run(**args, rerun_reason="encoder failed")
+    assert metrics["runs"][0]["reason"] == "encoder failed"
+
+
+def test_concurrent_run_cannot_read_test(setup, monkeypatch):
+    args, record, _ = setup
+    _sign(args, record)
+    (args["out_dir"] / RUN_LOCK).mkdir(parents=True)
+    monkeypatch.setattr("ml.evaluate_test.load_test_rows",
+                        lambda *a, **k: pytest.fail("concurrent run tried to read Test"))
+    with pytest.raises(EvaluationError, match="locked by an evaluation"):
+        run(**args, rerun_reason="technical failure")
+
+
+@pytest.mark.parametrize(("path_key", "message"), [
+    ("locked_manifest", "Train/Validation manifest changed"),
+    ("locked_split", "split CSV with Test IDs withheld changed"),
+])
+def test_changed_handover_blocks_test_read(setup, monkeypatch, path_key, message):
+    args, record, _ = setup
+    _sign(args, record)
+    with args[path_key].open("ab") as file:
+        file.write(b"\n")
+    monkeypatch.setattr("ml.evaluate_test.load_test_rows",
+                        lambda *a, **k: pytest.fail("Test was read before verifying the handover"))
+    with pytest.raises(FreezeError, match=message):
+        run(**args)
 
 
 def _rewrite_split(path, out, mutate):
@@ -169,7 +216,8 @@ def test_qa_split_must_match_frozen_split(setup, tmp_path, change):
     args["split"] = _rewrite_split(args["split"], tmp_path / "qa-split.csv", mutate)
     with pytest.raises(EvaluationError):
         run(**args)
-    assert not args["out_dir"].exists()
+    assert not (args["out_dir"] / PREDICTIONS_FILE).exists()
+    assert not (args["out_dir"] / METRICS_FILE).exists()
 
 
 def test_image_checksum_is_checked(setup):

@@ -1,8 +1,8 @@
 """AFN-050: the single final Test evaluation of the three frozen configurations.
 
 Runs only after AFN-049: the freeze record must carry ML and QA signatures and
-``ml.freeze.verify`` must match every pinned hash on disk (config, selection,
-code, bundle metadata and arrays). Nothing is fit here: the three bundles are
+``ml.freeze.verify`` must match every pinned hash on disk, including the
+Train/Validation handover. Nothing is fit here: the three bundles are
 loaded read-only and score each Test article through ``ModelBundle.predict``,
 the same path the Backend serves.
 
@@ -16,12 +16,13 @@ Outputs (one run per protocol; a rerun needs ``--rerun-reason`` and is logged):
   label, group and each configuration's ``fake_score``/``label``;
 * ``test-metrics.json``: Macro-F1, accuracy, per-class precision/recall/F1/
   support, confusion matrices (rows = true, cols = predicted, ``fake, real``),
-  Δ Macro-F1 Multimodal − Text-only, hashes, timestamps and warnings;
+  Macro-F1 difference (Multimodal minus Text-only), hashes, timestamps and warnings;
 * ``confusion-matrices/``: one CSV per configuration and
   ``afn-report-metrics.json`` for ``scripts/summarize_model_results.py``.
 
     .venv/bin/python -m ml.evaluate_test --freeze release/model-freeze.json \\
         --bundle-root backend/artifacts \\
+        --locked-manifest data/private/ml-v2/train-validation/manifest.jsonl \\
         --locked-split data/private/ml-v2/train-validation/split.csv \\
         --manifest data/private/ml-v2/qa-only/manifest-test.jsonl \\
         --split data/private/ml-v2/qa-only/split.csv --image-root data --offline --out-dir reports
@@ -36,6 +37,7 @@ import json
 import sys
 import tempfile
 from collections import Counter
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
@@ -57,6 +59,8 @@ LABELS = ["fake", "real"]
 PREDICTIONS_FILE = "test-predictions.jsonl"
 METRICS_FILE = "test-metrics.json"
 MATRIX_DIR = "confusion-matrices"
+RUN_LOCK = ".test-evaluation.lock"
+RUN_STARTED = ".test-evaluation.started"
 SMALL_TEST = 100       # below this, one sample moves Macro-F1 by about a point or more
 SMALL_SUPPORT = 10     # per-class support below this makes per-class scores unstable
 
@@ -171,6 +175,9 @@ def _sha256_text(text: str) -> str:
 def evaluate(record: dict[str, Any], bundles: dict[str, ModelBundle], rows: Sequence[Sample], encoder, *,
              inputs: dict[str, str], created_at: str, batch_size: int = 16) -> tuple[str, dict, dict]:
     """Return (predictions JSONL text, test-metrics document, report-metrics document)."""
+    is_fixture = any(r.is_fixture for r in rows)
+    if is_fixture != (record["evidence_kind"] != "VALIDATION_ONLY"):
+        raise EvaluationError("fixture Test rows and the freeze evidence kind disagree")
     scores, truncated = score(bundles, rows, encoder, batch_size=batch_size)
     lines = []
     for i, row in enumerate(rows):
@@ -182,9 +189,6 @@ def evaluate(record: dict[str, Any], bundles: dict[str, ModelBundle], rows: Sequ
         }, ensure_ascii=False, sort_keys=True))
     predictions = "\n".join(lines) + "\n"
 
-    is_fixture = any(r.is_fixture for r in rows)
-    if is_fixture != (record["evidence_kind"] != "VALIDATION_ONLY"):
-        raise EvaluationError("fixture Test rows and the freeze evidence kind disagree")
     configs = {}
     for name, bundle in bundles.items():
         frozen = record["configurations"][name]
@@ -218,19 +222,32 @@ def evaluate(record: dict[str, Any], bundles: dict[str, ModelBundle], rows: Sequ
     return predictions, metrics, report
 
 
-def write_outputs(out_dir: Path, predictions: str, metrics: dict, report: dict, *, rerun_reason: str | None) -> None:
-    out_dir = Path(out_dir)
-    metrics_path = out_dir / METRICS_FILE
-    previous_runs: list[dict] = []
-    if (out_dir / PREDICTIONS_FILE).exists() or metrics_path.exists():
-        if not rerun_reason or not rerun_reason.strip():
-            raise EvaluationError("Test was already evaluated; the protocol allows one run. "
+@contextmanager
+def _reserve_run(out_dir: Path, rerun_reason: str):
+    """Serialize attempts and check rerun authorization before any Test reads."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    lock = out_dir / RUN_LOCK
+    try:
+        lock.mkdir()
+    except FileExistsError as exc:
+        raise EvaluationError("Test output directory is locked by an evaluation") from exc
+    try:
+        metrics_path = out_dir / METRICS_FILE
+        attempted = any((out_dir / name).exists() for name in (RUN_STARTED, PREDICTIONS_FILE, METRICS_FILE))
+        if attempted and not rerun_reason:
+            raise EvaluationError("Test was already attempted; the protocol allows one run. "
                                   "A rerun for a technical failure needs --rerun-reason")
-        if metrics_path.exists():
-            previous_runs = json.loads(metrics_path.read_text(encoding="utf-8")).get("runs", [])
+        history = json.loads(metrics_path.read_text(encoding="utf-8")).get("runs", []) if metrics_path.exists() else []
+        yield history
+    finally:
+        lock.rmdir()
+
+
+def write_outputs(out_dir: Path, predictions: str, metrics: dict, report: dict, *,
+                  previous_runs: list[dict], rerun_reason: str) -> None:
     metrics["runs"] = previous_runs + [{
         "created_at": metrics["created_at"], "predictions_sha256": metrics["inputs"]["predictions_sha256"],
-        "reason": rerun_reason.strip() if rerun_reason else "first run"}]
+        "reason": rerun_reason or "first run"}]
 
     matrix_dir = out_dir / MATRIX_DIR
     matrix_dir.mkdir(parents=True, exist_ok=True)
@@ -239,8 +256,10 @@ def write_outputs(out_dir: Path, predictions: str, metrics: dict, report: dict, 
         text = "true\\pred,fake,real\n" + "".join(f"{label},{r[0]},{r[1]}\n" for label, r in zip(LABELS, rows))
         (matrix_dir / f"{name}.csv").write_text(text, encoding="utf-8")
     (matrix_dir / "afn-report-metrics.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    (out_dir / PREDICTIONS_FILE).write_text(predictions, encoding="utf-8")
-    metrics_path.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (out_dir / PREDICTIONS_FILE).write_bytes(predictions.encode("utf-8"))
+    metrics_tmp = out_dir / (METRICS_FILE + ".tmp")
+    metrics_tmp.write_text(json.dumps(metrics, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    metrics_tmp.replace(out_dir / METRICS_FILE)
 
 
 def load_frozen_bundles(record: dict[str, Any], bundle_root: Path) -> dict[str, ModelBundle]:
@@ -254,17 +273,23 @@ def load_frozen_bundles(record: dict[str, Any], bundle_root: Path) -> dict[str, 
 
 def run(*, freeze: Path, bundle_root: Path, locked_split: Path, manifest: Path, split: Path,
         image_root: Path | None, out_dir: Path, encoder, root: Path = REPO_ROOT,
+        locked_manifest: Path | None = None,
         rerun_reason: str | None = None, batch_size: int = 16) -> dict[str, Any]:
-    record = verify(read_record(freeze), bundle_root=bundle_root, root=root)  # signed + all hashes match
-    rows = load_test_rows(record, manifest=manifest, locked_split=locked_split, full_split=split,
-                          image_root=image_root)
-    bundles = load_frozen_bundles(record, bundle_root)
-    inputs = {"freeze_sha256": sha256_file(freeze), "test_manifest_sha256": sha256_file(manifest),
-              "qa_split_sha256": sha256_file(split), "locked_split_sha256": sha256_file(locked_split)}
-    created_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    predictions, metrics, report = evaluate(record, bundles, rows, encoder, inputs=inputs,
-                                            created_at=created_at, batch_size=batch_size)
-    write_outputs(out_dir, predictions, metrics, report, rerun_reason=rerun_reason)
+    record = verify(read_record(freeze), bundle_root=bundle_root, root=root,
+                    manifest=locked_manifest, split=locked_split)
+    out_dir = Path(out_dir)
+    reason = (rerun_reason or "").strip()
+    with _reserve_run(out_dir, reason) as previous_runs:
+        bundles = load_frozen_bundles(record, bundle_root)
+        rows = load_test_rows(record, manifest=manifest, locked_split=locked_split, full_split=split,
+                              image_root=image_root)
+        inputs = {"freeze_sha256": sha256_file(freeze), "test_manifest_sha256": sha256_file(manifest),
+                  "qa_split_sha256": sha256_file(split), "locked_split_sha256": sha256_file(locked_split)}
+        created_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        (out_dir / RUN_STARTED).write_text(created_at + "\n", encoding="utf-8")
+        predictions, metrics, report = evaluate(record, bundles, rows, encoder, inputs=inputs,
+                                                created_at=created_at, batch_size=batch_size)
+        write_outputs(out_dir, predictions, metrics, report, previous_runs=previous_runs, rerun_reason=reason)
     return metrics
 
 
@@ -274,6 +299,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--freeze", type=Path, default=DEFAULT_RECORD)
     parser.add_argument("--bundle-root", type=Path, required=True)
+    parser.add_argument("--locked-manifest", type=Path,
+                        help="frozen Train/Validation manifest (defaults to the ml-v2 handover)")
     parser.add_argument("--locked-split", type=Path, required=True, help="frozen split CSV with Test IDs withheld")
     parser.add_argument("--manifest", type=Path, required=True, help="Test-only manifest from QA")
     parser.add_argument("--split", type=Path, required=True, help="QA split CSV with Test IDs")
@@ -286,11 +313,13 @@ def main(argv: list[str] | None = None) -> int:
 
     cfg = load_experiment_config()
     try:
-        verify(read_record(args.freeze), bundle_root=args.bundle_root)  # fail fast, before loading CLIP
+        verify(read_record(args.freeze), bundle_root=args.bundle_root,
+               manifest=args.locked_manifest, split=args.locked_split)
         encoder = ClipImageEncoder(REPO_ROOT / cfg["image_features"]["reference"],
                                    cache_dir=args.hf_cache_dir, offline=args.offline)
         metrics = run(freeze=args.freeze, bundle_root=args.bundle_root, locked_split=args.locked_split,
-                      manifest=args.manifest, split=args.split, image_root=args.image_root,
+                      locked_manifest=args.locked_manifest, manifest=args.manifest, split=args.split,
+                      image_root=args.image_root,
                       out_dir=args.out_dir, encoder=encoder, rerun_reason=args.rerun_reason,
                       batch_size=int(cfg["image_features"]["batch_size"]))
     except (FreezeError, EvaluationError, DataContractError) as exc:
@@ -299,7 +328,7 @@ def main(argv: list[str] | None = None) -> int:
     for name, c in metrics["configurations"].items():
         print(f"{name:11s} Macro-F1={c['macro_f1']:.4f} accuracy={c['accuracy']:.4f} "
               f"matrix={c['confusion_matrix']['rows_true_cols_pred']}")
-    print(f"Δ Macro-F1 (MM − Text) = {metrics['delta_macro_f1_mm_minus_text']:+.4f}  "
+    print(f"Macro-F1 difference (MM - Text) = {metrics['delta_macro_f1_mm_minus_text']:+.4f}  "
           f"n={metrics['n_test']}  [{metrics['evidence_kind']}]")
     for warning in metrics["warnings"]:
         print(f"WARNING: {warning}")
