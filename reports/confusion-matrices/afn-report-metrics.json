@@ -1,0 +1,40 @@
+{
+  "schema": "afn-report-metrics-v1",
+  "evidence_kind": "TEST_FINAL",
+  "labels": [
+    "fake",
+    "real"
+  ],
+  "confusion_matrices": {
+    "text-only": [
+      [
+        12,
+        5
+      ],
+      [
+        1,
+        15
+      ]
+    ],
+    "image-only": [
+      [
+        17,
+        0
+      ],
+      [
+        12,
+        4
+      ]
+    ],
+    "multimodal": [
+      [
+        10,
+        7
+      ],
+      [
+        2,
+        14
+      ]
+    ]
+  }
+}
