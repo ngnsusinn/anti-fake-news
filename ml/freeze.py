@@ -48,6 +48,7 @@ ROLES = ("ml", "qa")
 LOCKED_PROTOCOL_STATUS = "locked"
 DEFAULT_SELECTED = REPO_ROOT / "configs" / "selected-models.json"
 DEFAULT_RECORD = REPO_ROOT / "release" / "model-freeze.json"
+TRAIN_VALIDATION_HANDOVER = Path("data/private/ml-v2/train-validation")
 EVALUATION_MODULE = "ml/evaluate_test.py"
 EVALUATION_COMMAND = ("python -m ml.evaluate_test --freeze release/model-freeze.json "
                       "--bundle-root backend/artifacts --locked-split <train-validation/split.csv> "
@@ -258,8 +259,9 @@ def sign(record: dict[str, Any], role: str, by: str, *, note: str | None = None,
 
 
 def verify(record: dict[str, Any], *, bundle_root: Path, root: Path = REPO_ROOT,
+           manifest: Path | None = None, split: Path | None = None,
            require_signed: bool = True) -> dict[str, Any]:
-    """Recompute every pinned hash; raise ``FreezeError`` on any difference."""
+    """Check the pinned hashes, including the Train/Validation handover."""
     if record.get("schema") != SCHEMA:
         raise FreezeError("not a freeze record")
     digest = canonical_sha256(record)
@@ -275,6 +277,19 @@ def verify(record: dict[str, Any], *, bundle_root: Path, root: Path = REPO_ROOT,
             problems.append("record status is not 'signed'")
         if record.get("blockers"):
             problems.append("record still lists blockers")
+    handover = root / TRAIN_VALIDATION_HANDOVER
+    data_files = (
+        ("Train/Validation manifest", manifest if manifest is not None else handover / "manifest.jsonl", "manifest_sha256"),
+        ("split CSV with Test IDs withheld", split if split is not None else handover / "split.csv", "split_sha256"),
+    )
+    for label, path, hash_key in data_files:
+        try:
+            current_sha = sha256_file(path)
+        except OSError:
+            problems.append(f"cannot read {label}: {path}")
+            continue
+        if current_sha != record["data"][hash_key]:
+            problems.append(f"{label} changed since freeze")
     protocol = record["protocol"]
     if sha256_file(root / protocol["path"]) != protocol["sha256"]:
         problems.append("experiment config changed since freeze")
@@ -336,6 +351,8 @@ def main(argv: list[str] | None = None) -> int:
     v = sub.add_parser("verify", help="recompute every hash; exit 1 on mismatch")
     v.add_argument("--record", type=Path, default=DEFAULT_RECORD)
     v.add_argument("--bundle-root", type=Path, required=True)
+    v.add_argument("--manifest", type=Path, help="Train/Validation manifest (defaults to the ml-v2 handover)")
+    v.add_argument("--split", type=Path, help="split CSV with Test IDs withheld (defaults to the ml-v2 handover)")
     v.add_argument("--allow-unsigned", action="store_true", help="check hashes of a draft")
     args = parser.parse_args(argv)
 
@@ -359,7 +376,8 @@ def main(argv: list[str] | None = None) -> int:
             write_record(record, args.record)
             print(f"{args.role} signed; status={record['status']}")
             return 0
-        verify(read_record(args.record), bundle_root=args.bundle_root, require_signed=not args.allow_unsigned)
+        verify(read_record(args.record), bundle_root=args.bundle_root, manifest=args.manifest,
+               split=args.split, require_signed=not args.allow_unsigned)
         print("freeze record matches the files on disk")
         return 0
     except FreezeError as exc:

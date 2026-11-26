@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from shutil import copyfile
 
 import numpy as np
 import pytest
@@ -100,6 +101,10 @@ def test_inconsistent_selection_is_refused(frozen_inputs):
 def test_two_signatures_then_verify(frozen_inputs):
     root, kwargs = frozen_inputs
     record = collect(**kwargs)
+    handover = root / "data" / "private" / "ml-v2" / "train-validation"
+    handover.mkdir(parents=True)
+    copyfile(kwargs["manifest"], handover / "manifest.jsonl")
+    copyfile(kwargs["split"], handover / "split.csv")
     with pytest.raises(FreezeError, match="missing ml signature"):
         verify(record, bundle_root=kwargs["bundle_root"], root=root)
     sign(record, "ml", "ml-person")
@@ -115,11 +120,18 @@ def test_edit_after_signing_voids_signatures(frozen_inputs):
     record = sign(sign(collect(**kwargs), "ml", "a"), "qa", "b")
     record["configurations"]["multimodal"]["threshold"] = 0.3
     with pytest.raises(FreezeError, match="edited after signing"):
-        verify(record, bundle_root=kwargs["bundle_root"], root=root)
+        verify(record, bundle_root=kwargs["bundle_root"], root=root,
+               manifest=kwargs["manifest"], split=kwargs["split"])
 
 
-@pytest.mark.parametrize("target", ["coef", "code", "config"])
-def test_changed_files_after_freeze_fail_verify(frozen_inputs, target):
+@pytest.mark.parametrize(("target", "message"), [
+    ("coef", "bundle does not match"),
+    ("code", "pinned code changed"),
+    ("config", "experiment config changed"),
+    ("manifest", "Train/Validation manifest changed"),
+    ("split", "split CSV with Test IDs withheld changed"),
+])
+def test_changed_files_after_freeze_fail_verify(frozen_inputs, target, message):
     root, kwargs = frozen_inputs
     record = sign(sign(collect(**kwargs), "ml", "a"), "qa", "b")
     if target == "coef":
@@ -129,10 +141,23 @@ def test_changed_files_after_freeze_fail_verify(frozen_inputs, target):
         np.save(coef, arr)
     elif target == "code":
         (root / "ml" / "pinned.py").write_text("VALUE = 3\n")
-    else:
+    elif target == "config":
         kwargs["config_path"].write_text(kwargs["config_path"].read_text() + "# edit\n")
-    with pytest.raises(FreezeError):
-        verify(record, bundle_root=kwargs["bundle_root"], root=root)
+    else:
+        with kwargs[target].open("ab") as file:
+            file.write(b"\n")
+    with pytest.raises(FreezeError, match=message):
+        verify(record, bundle_root=kwargs["bundle_root"], root=root,
+               manifest=kwargs["manifest"], split=kwargs["split"])
+
+
+def test_unsigned_verification_requires_handover_files(frozen_inputs):
+    root, kwargs = frozen_inputs
+    record = collect(**kwargs)
+    kwargs["manifest"].unlink()
+    with pytest.raises(FreezeError, match="cannot read Train/Validation manifest"):
+        verify(record, bundle_root=kwargs["bundle_root"], root=root, manifest=kwargs["manifest"],
+               split=kwargs["split"], require_signed=False)
 
 
 def test_cli_refuses_to_overwrite_signed_record(frozen_inputs, tmp_path):
