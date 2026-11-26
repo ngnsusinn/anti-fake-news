@@ -1,0 +1,94 @@
+{
+  "schema": "afn-release-index-v1",
+  "status": "blocked",
+  "checked_on": "2026-11-26",
+  "reviewed_source_commit": "4175c974e69d9364aff4428aade3acb7e39f4824",
+  "api_contract_version": "0.2.0",
+  "extension_manifest_version": "0.1.0",
+  "freeze": {
+    "path": "release/model-freeze.json",
+    "status": "signed",
+    "record_sha256": "7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8",
+    "ml_signed": true,
+    "qa_signed": true,
+    "bundle_verified_on_clean_machine": false,
+    "handoff_bundle_hashes_verified": 13,
+    "handoff_bundles_loaded": 3,
+    "unsigned_verify_passed": true,
+    "signed_verify_passed": true
+  },
+  "demo_model": {
+    "id": "afn-multimodal",
+    "version": "multimodal-20261126-105d5f14e79a",
+    "bundle_status": "candidate",
+    "metadata_sha256": "6cd766a982015fb661f7eee8a5aa1317f05efc562769f8a13ba054e572fc09d5",
+    "backend_production_smoke": {
+      "status": "passed",
+      "scope": "offline CLIP, loopback, synthetic input",
+      "health_status": 200,
+      "predict_without_token_status": 401,
+      "predict_status": 200
+    },
+    "qa_benchmark": {
+      "status": "passed_on_qa_machine",
+      "report": "reports/qa-benchmark-signed-bundle.json",
+      "server_median_ms": 101,
+      "http_median_ms": 111.0092
+    }
+  },
+  "data_index": "release/data-manifest-index.json",
+  "checks": [
+    {
+      "issue": 43,
+      "status": "blocked",
+      "report": "reports/e2e-real-model.md",
+      "awaiting": "Chromium demo and confirmation of editable input flow"
+    },
+    {
+      "issue": 44,
+      "status": "partial",
+      "report": "reports/security-privacy-review.md",
+      "awaiting": "runtime CORS, loopback and packaging checks; DATA review of sharing rights"
+    },
+    {
+      "issue": 58,
+      "status": "passed_pending_review",
+      "report": "reports/evaluation-audit.md",
+      "awaiting": "ML review of the prediction-level PASS evidence"
+    },
+    {
+      "issue": 59,
+      "status": "ready_for_review_with_open_dependencies",
+      "report": "reports/final-report.md",
+      "awaiting": "ML review, finalized DATA/Integration evidence, and demo-machine confirmation"
+    },
+    {
+      "issue": 60,
+      "status": "blocked",
+      "report": "reports/final-acceptance.md",
+      "awaiting": "independent clean-machine rehearsal and ML review"
+    }
+  ],
+  "packages": [
+    {
+      "issue": 54,
+      "status": "passed_extracted_zip_smoke_pending_clean_machine",
+      "checklist": "release/backend-checklist.md",
+      "qa_zip_sha256": "17fc8033ebfafe0008bacc765ff778f67026c71ad7e986c86680f2b3d271767c"
+    },
+    {
+      "issue": 57,
+      "status": "awaiting_independent_rehearsal",
+      "instructions": "docs/extension-setup.md"
+    }
+  ],
+  "clean_machine_rehearsal": "not_run",
+  "test_audit": {
+    "status": "passed_pending_ml_review",
+    "evidence_pr": 123,
+    "evidence_commit": "657bfe7360ee434eab64cd655c8d6e5a9dec6c71",
+    "sample_count": 33,
+    "group_count": 33,
+    "report": "reports/evaluation-audit.md"
+  }
+}

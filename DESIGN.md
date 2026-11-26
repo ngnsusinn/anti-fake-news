@@ -68,3 +68,10 @@ Gói mô hình chứa bộ tạo đặc trưng, bộ phân loại và ngưỡng 
 Cả ba cấu hình dùng hồi quy logistic và cùng tập chia. Demo dùng cấu hình kết hợp.
 
 Nội dung này tương ứng với trang 3–6 của [bài trình bày](slides/index.html#03). Phạm vi đề tài nằm trong [DEFINE.md](DEFINE.md).
+
+## Đối chiếu bản đóng gói ngày 26/11/2026
+
+Bản unpacked dùng popup và tự chọn ảnh hợp lệ đầu tiên. Flow màn hình phân
+tích ở §1 vẫn là thiết kế dùng để đối chiếu nhập/sửa/chọn thủ công.
+Backend đã có chế độ production với warm-up và kiểm hash metadata. ML đã chạy Test cuối sau khi merge freeze đủ chữ ký.
+QA tái tính metrics từ predictions đã lưu và chờ ML review. [Sơ đồ bản đang nghiệm thu](DIAGRAMS.md) · [Bằng chứng QA](reports/final-report.md)
