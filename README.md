@@ -4,6 +4,13 @@ FastAPI service and Chromium extension for multimodal article analysis.
 Python **3.13** is the verified shared setup for Backend and ML on Windows x64.
 See [ML environment](docs/ml-environment.md) for shared dependencies and CLIP checks.
 
+## Contents
+
+- [Production](#production) and [development setup](#development-setup)
+- [Configuration](#configuration) and [verification](#verification)
+- [Contracts and scope](#contracts-and-scope)
+- [Final QA report](reports/final-report.md), [acceptance checklist](reports/final-acceptance.md) and [release index](release/release-index.json)
+
 ## Production
 
 Follow the [Backend deployment guide](docs/backend-setup.md) to prepare a real
@@ -103,7 +110,7 @@ See [Extension smoke setup](docs/extension-w1.md) for Playwright and Chromium.
 - [Explicit mock usage and historical AFN-009 evidence](docs/dev-mock.md)
 - [AFN-022/023 changes, tests and review handoff](docs/implementation-issues-22-23.md)
 - [Historical AFN-007/008 evidence](docs/implementation-issues-7-8.md)
-- Project context: [DEFINE.md](DEFINE.md), [DESIGN.md](DESIGN.md)
+- Project context: [DEFINE.md](DEFINE.md), [DESIGN.md](DESIGN.md), [DIAGRAMS.md](DIAGRAMS.md)
 
 Candidate parity through the deployed Predictor and end-to-end QA remain in
 #37–39. See the [week 2 checkpoint](reports/week-2-gate.md) for review status.

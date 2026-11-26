@@ -1,0 +1,68 @@
+{
+  "schema": "afn-release-index-v1",
+  "status": "blocked",
+  "checked_on": "2026-11-26",
+  "reviewed_source_commit": "aefb0efc2b18fbb3a06d1766d1471ec188933eaf",
+  "api_contract_version": "0.2.0",
+  "extension_manifest_version": "0.1.0",
+  "freeze": {
+    "path": "release/model-freeze.json",
+    "status": "draft",
+    "record_sha256": "7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8",
+    "ml_signed": true,
+    "qa_signed": false,
+    "bundle_verified_on_clean_machine": false
+  },
+  "demo_model": {
+    "id": "afn-multimodal",
+    "version": "multimodal-20261126-105d5f14e79a",
+    "bundle_status": "candidate",
+    "metadata_sha256": "6cd766a982015fb661f7eee8a5aa1317f05efc562769f8a13ba054e572fc09d5"
+  },
+  "data_index": "release/data-manifest-index.json",
+  "checks": [
+    {
+      "issue": 43,
+      "status": "blocked",
+      "report": "reports/e2e-real-model.md",
+      "awaiting": "verified bundle, Chromium demo, and confirmation of editable input flow"
+    },
+    {
+      "issue": 44,
+      "status": "partial",
+      "report": "reports/security-privacy-review.md",
+      "awaiting": "runtime CORS, loopback and packaging checks; DATA review of sharing rights"
+    },
+    {
+      "issue": 58,
+      "status": "blocked",
+      "report": "reports/evaluation-audit.md",
+      "awaiting": "QA freeze signature and final Test predictions/metrics"
+    },
+    {
+      "issue": 59,
+      "status": "blocked",
+      "report": "reports/final-report.md",
+      "awaiting": "reviewed final data/results, audit and benchmark with the same model"
+    },
+    {
+      "issue": 60,
+      "status": "blocked",
+      "report": "reports/final-acceptance.md",
+      "awaiting": "independent clean-machine rehearsal and ML review"
+    }
+  ],
+  "packages": [
+    {
+      "issue": 54,
+      "status": "awaiting_verified_zip",
+      "checklist": "release/backend-checklist.md"
+    },
+    {
+      "issue": 57,
+      "status": "awaiting_independent_rehearsal",
+      "instructions": "docs/extension-setup.md"
+    }
+  ],
+  "clean_machine_rehearsal": "not_run"
+}
