@@ -9,14 +9,16 @@
    `python scripts/package_extension.py --output release/extension-next`.
 2. Mở `chrome://extensions`, bật **Developer mode**, chọn **Load unpacked**,
    rồi chọn thư mục đã tạo. Ghi lại ID hiển thị bên dưới tiện ích.
-3. Origin của gói là `chrome-extension://<ID>`. Dùng giá trị này cho
-   `AFN_EXTENSION_ORIGIN` trong cấu hình Backend khi hỗ trợ CORS của #38 đã có.
-   Khởi động Backend tại `127.0.0.1`.
+3. Origin của gói là `chrome-extension://<ID>`. Đặt đúng giá trị này cho
+   `AFN_EXTENSION_ORIGIN` để Backend cấp quyền CORS cho origin đó. Khởi động
+   hoặc khởi động lại Backend tại `127.0.0.1`.
 4. Mở bài viết có ảnh JPEG/PNG, bấm biểu tượng **Anti Fake News** rồi bấm
    **Phân tích** để xem điểm `fake_score` theo phần trăm và nhãn **Fake** hoặc **Real**.
    Chọn **Xem chi tiết** để xem văn bản và ảnh đã gửi, quy trình xử lý và thông số lượt dự đoán.
-   Chỉ demo suy luận thật khi
-   Backend chạy mode real, đã nạp artifact đã khóa và trả `model_ready=true`.
+   Popup dùng ảnh JPEG/PNG hợp lệ đầu tiên tải được và nhắc đổi bài nếu
+   thiếu nội dung hoặc ảnh. Với demo suy luận thật, kiểm `/health` có mode
+   real và `model_ready=true`, rồi đối chiếu model version trong chi tiết
+   với phiên bản bundle dùng cho buổi demo.
 
 Gói unpacked chứa token dùng với Backend cục bộ. Giữ gói trên máy đã cấu hình.
 Xem [kết nối API](extension-config.md) và

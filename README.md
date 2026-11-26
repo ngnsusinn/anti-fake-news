@@ -10,8 +10,10 @@ Follow the [Backend deployment guide](docs/backend-setup.md) to prepare a real
 Multimodal bundle and the pinned CLIP cache. Copy `.env.example`
 to `.env`, supply `AFN_DEMO_TOKEN` and `AFN_MODEL_METADATA_SHA256`,
 then run `python -m app` from `backend/`. The production server starts only after
-checking the bundle and warming up the real model. The [Chromium extension](docs/extension-setup.md)
-uses the loopback Backend and the same token.
+checking the bundle and warming up the real model. The signed AFN-049 bundle retains
+`status: candidate` and requires `AFN_ALLOW_CANDIDATE_MODEL=true`. The
+[Chromium extension](docs/extension-setup.md) uses the loopback Backend and the same token.
+Set `AFN_EXTENSION_ORIGIN` to the installed extension's origin.
 
 ## Development setup
 
@@ -61,7 +63,7 @@ Explicit CLI bind options override settings. Keep this local service on loopback
 | AFN_ENVIRONMENT | production in the deployment template; demo mode when unset |
 | AFN_PREDICTOR_MODE | real; mock requires dev/test |
 | AFN_DEMO_TOKEN | Required for production startup and for authenticated predictions |
-| AFN_EXTENSION_ORIGIN | Unset; enforcement remains #38 |
+| AFN_EXTENSION_ORIGIN | Unset by default. Set to the exact `chrome-extension://<id>` origin for browser CORS grants. |
 | AFN_MODEL_ARTIFACT_PATH | Multimodal bundle directory, relative to repo or absolute. The deployment template uses backend/artifacts/multimodal |
 | AFN_MODEL_METADATA_SHA256 | SHA-256 of the exact bundle metadata.json, required in production |
 | AFN_ALLOW_CANDIDATE_MODEL | False by default. Set to true to deploy a pinned real candidate |

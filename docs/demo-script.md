@@ -8,8 +8,10 @@ dùng ngoài Test, lưu bằng chứng nguồn theo quy trình dữ liệu.
 1. Cài gói theo [hướng dẫn](extension-setup.md). Để phục vụ fixture cục bộ, chạy
    `python -m http.server 8765 --bind 127.0.0.1 --directory tests/fixtures/pages`.
    Mở `http://127.0.0.1:8765/article.html` rồi bấm biểu tượng Extension.
-2. Bấm **Phân tích**. Ghi nhận nhãn **Fake** hoặc **Real** và điểm
-   `fake_score` theo phần trăm. Popup đánh dấu kết quả mock.
+2. Bấm **Phân tích**. Popup tự trích văn bản và dùng ảnh JPEG/PNG hợp lệ
+   đầu tiên tải được. Ghi nhận nhãn **Fake** hoặc **Real** và điểm
+   `fake_score` theo phần trăm. Mở **Xem chi tiết** để đối chiếu đầu vào,
+   phiên bản mô hình và thời gian xử lý. Mock hiện dòng **Kết quả giả lập**.
 3. Mở một bài khác rồi lặp lại để kiểm tra tiện ích lấy nội dung từ tab hiện tại.
 4. Dừng Backend, bấm **Phân tích** và kiểm tra thông báo kết nối. Khởi động lại
    Backend rồi bấm **Phân tích** lần nữa.

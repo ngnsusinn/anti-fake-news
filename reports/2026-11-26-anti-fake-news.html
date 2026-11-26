@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Báo cáo Đề tài 07 | Anti Fake News</title>
-  <meta name="description" content="Phạm vi, dữ liệu, kết quả Validation, kiểm thử demo và bàn giao dự án phát hiện tin giả từ bài viết và ảnh.">
+  <meta name="description" content="Kiến trúc, pipeline dữ liệu và mô hình, hướng dẫn chạy cùng kết quả Validation, holdout tái dựng và demo Anti Fake News.">
   <meta property="og:title" content="Báo cáo Đề tài 07 | Anti Fake News">
-  <meta property="og:description" content="Kết quả so sánh ba cấu hình trên Validation và minh chứng chạy demo Chromium với FastAPI.">
+  <meta property="og:description" content="Sơ đồ hoạt động, hướng dẫn chạy Chromium và FastAPI, cùng kết quả so sánh mô hình trên hai tập.">
   <meta property="og:type" content="article">
   <script>
     try {
@@ -138,15 +138,50 @@
     meter::-webkit-meter-bar { border: 0; border-radius: .35rem; background: var(--soft); }
     meter::-webkit-meter-optimum-value { border-radius: .35rem; background: var(--accent); }
     meter::-moz-meter-bar { border-radius: .35rem; background: var(--accent); }
-    .flow { display: flex; flex-wrap: wrap; gap: .45rem; padding: 0; list-style: none; }
-    .flow li { display: flex; align-items: center; gap: .45rem; margin: 0; }
-    .flow li:not(:last-child)::after { content: "→"; color: var(--accent); }
-    .flow span { padding: .4rem .6rem; border-radius: .35rem; background: var(--soft); font-weight: 650; }
+    .diagram { margin: 1.1rem 0; padding: .9rem 1rem; border: 1px solid var(--line); border-radius: .65rem; }
+    .diagram figcaption { margin-bottom: .65rem; color: var(--ink); font-weight: 750; }
+    .diagram .node { padding: .6rem .65rem; border-radius: .4rem; background: var(--soft); }
+    .diagram .node strong, .diagram .node small { display: block; }
+    .diagram .node strong { line-height: 1.35; }
+    .diagram .node small { color: var(--muted); margin-top: .26rem; font-size: .82rem; }
+    .flow, .branches, .sequence { margin: 0; padding: 0; list-style: none; }
+    .flow { display: flex; gap: 1.25rem; align-items: stretch; }
+    .flow li { position: relative; flex: 1 1 0; min-width: 0; margin: 0; }
+    .flow li:not(:last-child)::after {
+      content: "→" / "";
+      position: absolute;
+      inset-inline-end: -1.09rem;
+      inset-block-start: calc(50% - .8em);
+      color: var(--accent);
+      font-weight: 750;
+    }
+    .branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.25rem), 1fr)); gap: .55rem; }
+    .branches li { margin: 0; }
+    .diagram .focus { background: var(--accent-soft); }
+    .diagram .fail { background: var(--warning-soft); }
+    .transition { margin: .45rem 0; color: var(--accent); font-size: .84rem; font-weight: 700; }
+    .sequence li {
+      display: grid;
+      grid-template-columns: minmax(8.9rem, 1fr) 2fr;
+      gap: .35rem .75rem;
+      margin: 0;
+      padding: .55rem .25rem;
+      border-bottom: 1px solid var(--line);
+      font-size: .9rem;
+    }
+    .sequence li:last-child { border: 0; }
+    .sequence strong { color: var(--accent); }
+    .hashes code { font-size: .8em; }
     footer { padding: .25rem 0 2rem; color: var(--muted); font-size: .875rem; }
     @media (max-width: 820px) {
       .layout { grid-template-columns: minmax(0, 1fr); }
       .toc { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: none; }
       .toc p { grid-column: 1 / -1; }
+    }
+    @media (max-width: 680px) {
+      .flow { flex-direction: column; }
+      .flow li:not(:last-child)::after { content: "↓" / ""; inset-inline-end: auto; inset-inline-start: .65rem; inset-block-start: 100%; line-height: 1.25rem; }
+      .sequence li { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
       .stats { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
@@ -173,6 +208,7 @@
       pre { white-space: pre-wrap; overflow-wrap: anywhere; }
       h1, h2, h3, summary, caption { break-after: avoid; }
       tr, .stats, .snippet { break-inside: avoid; }
+      .diagram { break-inside: avoid; }
       details::details-content { content-visibility: visible; }
     }
   </style>
@@ -190,10 +226,10 @@
     <header class="hero" id="dau-trang">
       <p class="meta">Báo cáo dự án · Đề tài 07 · <time datetime="2026-11-26">26/11/2026</time></p>
       <h1>Phát hiện tin giả dựa trên bài viết và hình ảnh</h1>
-      <p>Trên cùng 32 mẫu Validation, mô hình chỉ văn bản đạt Macro-F1 0,686. Mô hình kết hợp đạt 0,624. Demo Chromium đã chạy với mô hình ứng viên thật. Kết quả Test cuối đang chờ bộ dữ liệu QA và bundle đúng hồ sơ đã ký.</p>
+      <p>Mô hình chỉ văn bản đạt Macro-F1 0,686 trên Validation và 0,817 trên holdout 33 mẫu tái dựng. Mô hình kết hợp đạt 0,624 và 0,723. Demo Chromium đã chạy với FastAPI và bundle thật. Báo cáo trình bày kiến trúc, pipeline, cách tái chạy và phạm vi của từng kết quả.</p>
       <dl class="stats">
         <div><dt>Mẫu trong split ML-v2</dt><dd>218</dd></div>
-        <div><dt>Macro-F1 baseline trên Validation</dt><dd>0,686</dd></div>
+        <div><dt>Macro-F1 baseline trên holdout tái dựng</dt><dd>0,817</dd></div>
         <div><dt>HTTP trung vị sau warm-up</dt><dd>142,57 ms</dd></div>
       </dl>
     </header>
@@ -233,18 +269,33 @@
         <section class="panel" id="pham-vi">
           <h2><a href="#pham-vi">1. Khảo sát nghiệp vụ, chốt phạm vi</a></h2>
           <p>Biên tập viên và người kiểm duyệt cần sàng lọc bài viết để ưu tiên xác minh. Người đọc có thể dùng tiện ích để xem tín hiệu nghi vấn của bài đang mở. Hệ thống dự đoán theo hai nhãn <code>fake</code> và <code>real</code> của dữ liệu nguồn. Người dùng cần đối chiếu bằng chứng trước khi kết luận về bài viết.</p>
-          <p>Mỗi lượt nhận một thân bài tiếng Anh, tiêu đề tùy chọn và một ảnh JPEG/PNG. Giao diện tiếng Việt, chạy trên Chromium và suy luận cục bộ. Phiếu đăng ký ban đầu dự kiến demo Streamlit. Đặc tả và mã triển khai chọn tiện ích Chromium Manifest V3 và FastAPI.</p>
+          <p>Mỗi lượt nhận một thân bài tiếng Anh, tiêu đề tùy chọn và một ảnh JPEG/PNG. Giao diện tiếng Việt, chạy trên Chromium và suy luận cục bộ. Phiếu đăng ký ban đầu dự kiến demo Streamlit. Thiết kế sau đó chọn Chromium Manifest V3 và FastAPI. Gói hiện hành mở popup một nút từ biểu tượng tiện ích.</p>
           <ul>
             <li><strong>Từ bài đang xem.</strong> Mở tiện ích, bấm <strong>Phân tích</strong> và mở <strong>Xem chi tiết</strong> để xem đầu vào, điểm và thông tin mô hình.</li>
-            <li><strong>Khi trang hoặc ảnh bị chặn.</strong> Luồng trang phân tích hỗ trợ dán văn bản và tải ảnh thủ công.</li>
+            <li><strong>Khi trang hoặc ảnh bị chặn.</strong> Popup báo thiếu đầu vào. Dùng bài khác có nội dung và ảnh tải được. Dán văn bản và tải ảnh thủ công thuộc trang phân tích từng được thiết kế, hiện nằm ngoài manifest và gói unpacked.</li>
             <li><strong>Khi cần đo đóng góp của ảnh.</strong> Nhóm nghiên cứu so sánh ba cấu hình trên cùng dữ liệu đã chia.</li>
           </ul>
-          <p class="sources"><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/output/pdf/phieu-dang-ky-de-tai-07.pdf">Phiếu đăng ký đề tài 07 (PDF)</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/DEFINE.md">Đặc tả phạm vi và nghiệm thu</a></p>
+          <p class="sources"><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/output/pdf/phieu-dang-ky-de-tai-07.pdf">Phiếu đăng ký đề tài 07 (PDF)</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/DEFINE.md">Phạm vi và tiêu chí thiết kế</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/extension/manifest.json">Manifest đang dùng</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/scripts/package_extension.py">Danh sách tệp đóng gói</a></p>
         </section>
 
         <section class="panel" id="du-lieu">
           <h2><a href="#du-lieu">2. Chuẩn bị dữ liệu, thiết kế đánh giá</a></h2>
           <p>Dữ liệu lấy từ FakeNewsNet (GossipCop và PolitiFact). Bản thu hồi có 400 bản ghi, trong đó 286 có cả thân bài và ảnh. Bản xuất DATA có 352 bản ghi. Bước chuẩn bị ML-v2 giữ 218 mẫu, loại 134 mẫu, chủ yếu do thiếu ảnh (66), ảnh quá nhỏ (36), thân bài quá ngắn (14) hoặc thiếu thân bài (12).</p>
+          <figure class="diagram" id="pipeline-du-lieu">
+            <figcaption>Pipeline chuẩn bị dữ liệu ML-v2</figcaption>
+            <ol class="flow">
+              <li class="node"><strong>Đọc bản xuất DATA</strong><small>352 bản ghi, ánh xạ nhóm gốc và ảnh cục bộ.</small></li>
+              <li class="node"><strong>Kiểm tra đầu vào</strong><small>Lọc theo quy tắc thân bài và ảnh, giữ 218 mẫu.</small></li>
+              <li class="node"><strong>Gom nhóm</strong><small>So hash, nội dung và ảnh gần trùng, giữ 208 nhóm.</small></li>
+              <li class="node"><strong>Chia theo nhóm</strong><small>Seed 42, mục tiêu 70/15/15, mỗi nhóm ở một tập.</small></li>
+            </ol>
+            <p class="transition"><span aria-hidden="true">↓</span> Đầu ra</p>
+            <ul class="branches">
+              <li class="node focus"><strong>Train · 153 mẫu</strong><small>Fit từ vựng, TF-IDF và bộ phân loại logistic.</small></li>
+              <li class="node"><strong>Validation · 32 mẫu</strong><small>Chọn C và ngưỡng riêng cho mỗi cấu hình.</small></li>
+              <li class="node fail"><strong>Test · 33 mẫu</strong><small>Manifest và split đầy đủ nằm riêng. Gói Train/Validation ẩn ID Test.</small></li>
+            </ul>
+          </figure>
           <div class="table-wrap" role="region" aria-label="Phân bố dữ liệu ML-v2" tabindex="0">
             <table class="matrix">
               <caption>ML-v2 chia theo nhóm với seed 42 và tỷ lệ mục tiêu 70/15/15.</caption>
@@ -304,21 +355,68 @@
 
         <section class="panel" id="giai-phap">
           <h2><a href="#giai-phap">4. Xây dựng giải pháp và sản phẩm tối thiểu</a></h2>
-          <ol class="flow" aria-label="Luồng xử lý">
-            <li><span>Bài viết</span></li>
-            <li><span>Tiện ích Chromium</span></li>
-            <li><span>FastAPI cục bộ</span></li>
-            <li><span>TF-IDF + CLIP</span></li>
-            <li><span>Kết quả</span></li>
-          </ol>
-          <p>Tiện ích gửi UUID, thân bài, tiêu đề tùy chọn và một tệp ảnh qua <code>POST /predict</code>. FastAPI xác thực token, kiểm tra payload và gọi predictor. Predictor chuẩn hóa thân bài (tối đa 1.500 từ), đổi ảnh sang RGB, tạo 5.000 đặc trưng TF-IDF và 512 đặc trưng CLIP ViT-B/32, rồi ghép 5.512 chiều cho bộ phân loại logistic.</p>
-          <p>API trả nhãn, <code>fake_score</code>, mã và phiên bản mô hình, thời gian xử lý và cờ cắt văn bản. Điểm nghi vấn được so sánh với ngưỡng trong bundle để chọn nhãn. Tiện ích hiển thị điểm theo phần trăm và cho mở chi tiết lượt phân tích.</p>
-          <p class="sources"><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/DESIGN.md">Kiến trúc</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/api-contract.md">Hợp đồng API v0.2.0</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/inference-interface.md">Giao diện predictor</a></p>
+          <figure class="diagram" id="kien-truc">
+            <figcaption>Kiến trúc đang triển khai</figcaption>
+            <ol class="flow">
+              <li class="node"><strong>Tab bài viết</strong><small>Cung cấp DOM của trang và URL ảnh ứng viên.</small></li>
+              <li class="node"><strong>Chromium MV3</strong><small><code>popup.js</code> điều phối, <code>extract.js</code> đọc DOM khi bấm Phân tích.</small></li>
+              <li class="node"><strong>FastAPI loopback</strong><small><code>127.0.0.1:8000</code>, xác thực và kiểm tra đầu vào.</small></li>
+              <li class="node focus"><strong>Predictor cục bộ</strong><small>Bundle Multimodal đã nạp, CLIP từ cache offline.</small></li>
+            </ol>
+            <p class="transition"><span aria-hidden="true">↳</span> FastAPI trả kết quả về popup đang chờ</p>
+          </figure>
+          <p>Quyền <code>activeTab</code> và <code>scripting</code> cho phép popup đọc tab lúc người dùng yêu cầu. Bộ trích xuất ưu tiên cấu trúc theo nguồn, vùng bài viết và metadata ảnh. Tiện ích thử lần lượt các ảnh ứng viên rồi lấy JPEG/PNG hợp lệ đầu tiên. Các byte của ảnh được gửi tới Backend cục bộ cùng văn bản đã trích.</p>
+          <figure class="diagram" id="chuoi-yeu-cau">
+            <figcaption>Trình tự một lượt phân tích thành công</figcaption>
+            <ol class="sequence">
+              <li><strong>Người dùng → Popup</strong><span>Mở Anti Fake News, bấm <b>Phân tích</b>. Popup tạo UUID và đọc tab hiện tại cùng cấu hình đóng gói.</span></li>
+              <li><strong>Popup → Tab nguồn</strong><span>Chạy bộ trích xuất, lấy tiêu đề/thân bài, chọn ảnh và rút gọn văn bản đến giới hạn gửi.</span></li>
+              <li><strong>Popup → FastAPI</strong><span>Gửi <code>POST /predict</code> với <code>X-Demo-Token</code> và multipart <code>request_id</code>, <code>title</code> tùy chọn, <code>text</code>, <code>image</code>.</span></li>
+              <li><strong>FastAPI → Predictor</strong><span>Xác thực, kiểm tra byte, định dạng, nội dung và readiness. Chuyển đầu vào hợp lệ sang suy luận.</span></li>
+              <li><strong>FastAPI → Popup</strong><span>Trả nhãn, điểm, mã/phiên bản mô hình, thời gian, cờ cắt văn bản và ngưỡng trong header khi có.</span></li>
+              <li><strong>Popup → Người dùng</strong><span>Đối chiếu UUID của lượt hiện tại, hiện Fake/Real và điểm %. <b>Xem chi tiết</b> hiển thị thông tin đã gửi và kết quả.</span></li>
+            </ol>
+          </figure>
+          <figure class="diagram" id="pipeline-du-doan">
+            <figcaption>Pipeline đặc trưng và quyết định của Multimodal</figcaption>
+            <ul class="branches">
+              <li class="node"><strong>Tiêu đề và thân bài → TF-IDF</strong><small>Chuẩn hóa văn bản, giữ tối đa 1.500 từ thân bài, biến đổi bằng từ vựng và IDF đã fit trên Train. Đầu ra tối đa 5.000 chiều.</small></li>
+              <li class="node"><strong>Ảnh JPEG/PNG → CLIP</strong><small>Đọc hướng EXIF, chuẩn hóa RGB, chạy CLIP ViT-B/32 cố định và chuẩn hóa L2. Đầu ra 512 chiều.</small></li>
+            </ul>
+            <p class="transition"><span aria-hidden="true">↓</span> Hội tụ đặc trưng</p>
+            <ol class="flow">
+              <li class="node"><strong>Ghép đặc trưng</strong><small>Ghép TF-IDF trước CLIP, tổng 5.512 chiều ở bundle dự án.</small></li>
+              <li class="node"><strong>Hồi quy logistic</strong><small>Dùng hệ số đã huấn luyện để tính điểm lớp fake.</small></li>
+              <li class="node focus"><strong>Áp ngưỡng</strong><small>Khi điểm ≥ ngưỡng thì Fake, ngược lại Real. Bundle Multimodal dùng 0,70.</small></li>
+            </ol>
+          </figure>
+          <p>Text-only chạy nhánh văn bản. Image-only chạy nhánh ảnh. So sánh ba cấu hình giúp quan sát thay đổi khi bổ sung ảnh. Điểm do mô hình tính theo nhãn nguồn và có thể dùng để ưu tiên bài cần đối chiếu.</p>
+          <p class="sources"><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/DESIGN.md">Kiến trúc thiết kế</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/extension/popup.js">Luồng popup đang chạy</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/api-contract.md">Hợp đồng API v0.2.0</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/inference-interface.md">Giao diện predictor</a></p>
         </section>
 
         <section class="panel" id="tich-hop">
           <h2><a href="#tich-hop">5. Tích hợp, xử lý tình huống lỗi</a></h2>
+          <figure class="diagram" id="khoi-dong-backend">
+            <figcaption>Khởi động Backend real và chuyển trạng thái readiness</figcaption>
+            <ol class="flow">
+              <li class="node"><strong>Đọc cấu hình</strong><small>Cổng loopback, token, origin, đường dẫn và SHA-256 metadata.</small></li>
+              <li class="node"><strong>Nạp bundle</strong><small>Kiểm schema, checksum, trạng thái candidate và danh tính encoder.</small></li>
+              <li class="node"><strong>CLIP offline + warm-up</strong><small>Mở checkpoint đã ghim và thử một lượt suy luận tổng hợp.</small></li>
+              <li class="node focus"><strong>Real / ready</strong><small><code>GET /health</code> trả <code>model_ready=true</code> trước khi dùng popup.</small></li>
+            </ol>
+            <p class="transition"><span aria-hidden="true">↳</span> Nếu nạp thất bại, production dừng khởi động. Ở chế độ phát triển có thể thấy HTTP 200 trên health với <code>model_ready=false</code> và HTTP 503 cho đầu vào dự đoán hợp lệ.</p>
+          </figure>
+          <figure class="diagram" id="phuc-hoi-loi">
+            <figcaption>Các nhánh lỗi và cách tiếp tục</figcaption>
+            <ul class="branches">
+              <li class="node fail"><strong>Thiếu bài hoặc ảnh</strong><small>Ở popup, thử bài khác có thân bài và ảnh JPEG/PNG tải được.</small></li>
+              <li class="node fail"><strong>400 hoặc 413</strong><small>Kiểm định dạng và giảm kích thước văn bản/ảnh. Sau đó phân tích lại.</small></li>
+              <li class="node fail"><strong>401 hoặc mất kết nối</strong><small>So token, cổng và origin. Đóng gói lại khi đổi token hoặc cổng.</small></li>
+              <li class="node fail"><strong>503 hoặc timeout</strong><small>Kiểm health, bundle và CLIP. Bấm Phân tích lại khi Backend đã sẵn sàng.</small></li>
+            </ul>
+          </figure>
           <p><span class="tag">Demo kỹ thuật đạt</span> Ngày 26/11/2026, Chromium unpacked chạy trọn luồng với FastAPI production và bundle ứng viên thật <code>multimodal-20261125-105d5f14e79a</code>. Runner xác nhận nhãn đúng theo ngưỡng của bundle, ảnh và văn bản khớp với nội dung đã gửi, đồng thời mở được phần chi tiết. Đầu vào trình duyệt là fixture tổng hợp.</p>
+          <p>Smoke HTTP chạy lại trong lần cập nhật cho thấy <code>/health</code> trả 200 real/ready, <code>/predict</code> thiếu token trả 401 và request hợp lệ trả 200. Các kiểm thử tập trung cho evaluator và đóng gói Extension đạt 15/15.</p>
           <div class="table-wrap" role="region" aria-label="Kiểm thử tích hợp chạy bổ sung" tabindex="0">
             <table>
               <thead><tr><th scope="col">Ca chạy lại</th><th scope="col">Kết quả quan sát</th></tr></thead>
@@ -330,7 +428,7 @@
               </tbody>
             </table>
           </div>
-          <p>API dùng 400 cho đầu vào sai và 413 khi vượt giới hạn byte. Backend áp dụng tối đa 50.000 ký tự thân bài, 500 ký tự tiêu đề, ảnh 10 MiB và 20 triệu pixel, toàn request mặc định 12 MiB. Ma trận hồi quy của dự án ghi thêm bằng chứng cho luồng giữ bản nhập và bỏ phản hồi chậm.</p>
+          <p>Backend áp dụng tối đa 50.000 ký tự thân bài, 500 ký tự tiêu đề, ảnh 10 MiB và 20 triệu pixel, toàn request mặc định 12 MiB. Popup kiểm tra UUID và vòng đời request để bỏ phản hồi không còn hiệu lực. Ma trận hồi quy còn ghi bằng chứng lịch sử cho giao diện trang phân tích riêng.</p>
           <h3>Phép đo độ trễ chạy bổ sung</h3>
           <div class="table-wrap" role="region" aria-label="Thước đo độ trễ Backend" tabindex="0">
             <table class="matrix">
@@ -380,6 +478,16 @@
         <section class="panel" id="danh-gia">
           <h2><a href="#danh-gia">6. Đánh giá trên cùng điều kiện với baseline</a></h2>
           <p>Ba cấu hình dùng cùng ID và thứ tự mẫu của Train/Validation, cùng quy tắc tiền xử lý và hồi quy logistic. Mỗi cấu hình chọn <code>C</code> và ngưỡng từ cùng lưới tìm kiếm trên Validation. Macro-F1 là trung bình F1 của hai lớp.</p>
+          <p>Giao thức thử <code>C</code> trên lưới 0,01 · 0,1 · 1 · 10 · 100 và ngưỡng từ 0,30 đến 0,70, bước 0,10. Khi điểm bằng nhau, ưu tiên ngưỡng gần 0,50 hơn, rồi <code>C</code> nhỏ hơn, rồi ngưỡng thấp hơn. Bundle giữ bộ phân loại fit trên Train và các giá trị đã chọn.</p>
+          <figure class="diagram" id="pipeline-danh-gia">
+            <figcaption>Quy trình so sánh ba cấu hình</figcaption>
+            <ol class="flow">
+              <li class="node"><strong>Fit trên Train</strong><small>Huấn luyện Text-only, Image-only và Multimodal trên cùng 153 mẫu.</small></li>
+              <li class="node"><strong>Chọn trên Validation</strong><small>Dùng cùng 32 mẫu và lưới C/ngưỡng. Giữ cấu hình có Macro-F1 cao nhất.</small></li>
+              <li class="node"><strong>Xuất bundle</strong><small>Lưu thông số, từ vựng/IDF khi có, hệ số logistic, ngưỡng và danh tính CLIP.</small></li>
+              <li class="node focus"><strong>Đánh giá holdout</strong><small>Chạy cả ba trên cùng 33 mẫu tái dựng. Tổng hợp Macro-F1, ma trận và các ca bất đồng.</small></li>
+            </ol>
+          </figure>
           <figure aria-labelledby="chart-caption">
             <figcaption id="chart-caption">Macro-F1 trên cùng 32 mẫu Validation, thang từ 0 đến 1</figcaption>
             <ul class="chart">
@@ -424,10 +532,47 @@
               </table>
             </div>
           </details>
-          <h3>Trạng thái Test cuối và phân tích lỗi</h3>
-          <p class="note warning"><strong>Chưa có số đo Test cuối.</strong> Hồ sơ freeze đã có chữ ký ML và QA và đã merge vào <code>main</code>. Lệnh <code>ml.evaluate_test</code> chạy bổ sung dừng ở bước xác minh, trước suy luận. Checkout thiếu manifest và split Train/Validation đã khóa, thiếu gói Test do QA giữ, và ba bundle cục bộ mang metadata khác hồ sơ. Bản checkout Windows còn lệch hash ở các tệp dùng CRLF. Hai tệp cấu hình và 13/13 tệp được ghim có byte Git khớp hồ sơ.</p>
-          <p>Khi có đầu ra AFN-050, phép phân tích ghép dự đoán Text-only và Multimodal theo ID và đếm bốn nhóm: cả hai đúng, chỉ Text đúng, chỉ Multimodal đúng, cả hai sai. Quy mô nhỏ, 21 hostname xuất hiện ở nhiều split và thiếu event ID giới hạn khả năng suy rộng sang nguồn hoặc sự kiện mới.</p>
-          <p class="sources"><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/reports/validation-search.json">Số liệu Validation gốc</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/release/model-freeze.json">Hồ sơ đã ký</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/reports/error-analysis.md">Quy trình phân tích lỗi</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/issues/50">AFN-050</a></p>
+          <details>
+            <summary>Kết quả chạy lại huấn luyện trên máy hiện tại</summary>
+            <p>Run <code>20261126T072150Z</code> trên Windows với Python 3.13.0 dùng cùng manifest, split và giá trị cấu hình đã đọc. Text-only chọn <code>C=100</code>, ngưỡng 0,70, Macro-F1 0,716. Image-only và Multimodal đạt 0,536 và 0,624. Run gốc lưu Python 3.14.7 và Text-only 0,686. Chưa xác định nguyên nhân chênh lệch của Text-only.</p>
+            <p>Ba bundle dựng lại đều cho nhãn khớp sau xuất và nạp. Lượt holdout bên dưới dùng các bundle ngày 25/11 có tham số đã đối chiếu với AFN-049.</p>
+          </details>
+          <h3 id="holdout">Kết quả bổ sung trên holdout tái dựng</h3>
+          <p>Ngày 26/11/2026, pipeline dựng lại 33 mẫu thuộc 33 nhóm từ bản xuất DATA trên Git. Hash manifest Train/Validation và split ẩn ID khớp hồ sơ AFN-049. Trình đánh giá đối chiếu nhóm holdout và checksum ảnh, rồi chạy ba bundle thật ngày 25/11 với CLIP offline. Cả 10 tệp tham số khớp hash hồ sơ. C và ngưỡng giữ nguyên. Metadata ba bundle mang phiên bản cũ hơn bản đã ký.</p>
+          <div class="table-wrap" role="region" aria-label="Kết quả holdout của ba mô hình" tabindex="0">
+            <table class="matrix wide-table" id="holdout-scores">
+              <caption>Cùng 33 mẫu, gồm 17 fake và 16 real. Ma trận theo thứ tự fake→fake, fake→real, real→fake, real→real.</caption>
+              <thead><tr><th scope="col">Mô hình</th><th scope="col">Macro-F1</th><th scope="col">Accuracy</th><th scope="col">Δ Macro-F1 so với Text</th><th scope="col">Ma trận</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Text-only</th><td>0,817</td><td>81,82%</td><td>0,000</td><td>12 · 5 · 1 · 15</td></tr>
+                <tr><th scope="row">Image-only</th><td>0,570</td><td>63,64%</td><td>−0,247</td><td>17 · 0 · 12 · 4</td></tr>
+                <tr><th scope="row">Multimodal</th><td>0,723</td><td>72,73%</td><td>−0,093</td><td>10 · 7 · 2 · 14</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Text-only và Multimodal cùng đúng 22 ca, cùng sai 4 ca. Trong 7 ca bất đồng, Text-only đúng 5 ca và Multimodal đúng 2 ca. Multimodal bỏ sót 7/17 mẫu fake so với 5/17 của Text-only, đồng thời báo nhầm 2/16 mẫu real so với 1/16. Image-only bắt đủ 17 mẫu fake và gán nhầm 12/16 mẫu real. Kết quả chỉ mô tả tập nhỏ này. Có 21 hostname xuất hiện ở nhiều split và chưa có event ID để kiểm tra khả năng suy rộng sang sự kiện mới.</p>
+          <details>
+            <summary>Xem precision, recall và F1 trên holdout</summary>
+            <div class="table-wrap" role="region" aria-label="Chỉ số từng lớp trên holdout" tabindex="0">
+              <table class="matrix">
+                <caption>Thứ tự precision / recall / F1.</caption>
+                <thead><tr><th scope="col">Mô hình</th><th scope="col">Fake</th><th scope="col">Real</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">Text-only</th><td>0,923 / 0,706 / 0,800</td><td>0,750 / 0,938 / 0,833</td></tr>
+                  <tr><th scope="row">Image-only</th><td>0,586 / 1,000 / 0,739</td><td>1,000 / 0,250 / 0,400</td></tr>
+                  <tr><th scope="row">Multimodal</th><td>0,833 / 0,588 / 0,690</td><td>0,667 / 0,875 / 0,757</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <dl class="hashes">
+              <dt>SHA-256 manifest holdout tái dựng</dt>
+              <dd><code>b80d41e2332f7a55a4660353703ae7825183ab0c324d6aeb1bfabb91d39b0107</code></dd>
+              <dt>SHA-256 split đầy đủ tái dựng</dt>
+              <dd><code>5594cda3a17d37b1d39d93315125030d0229d7ef03ffb6551efa5fba2ee1be73</code></dd>
+            </dl>
+          </details>
+          <p class="note warning"><strong>Trạng thái trên GitHub ngày 26/11/2026.</strong> Hồ sơ AFN-049 đã có chữ ký ML và QA và đã merge vào <code>main</code>. Issue #50 đang ở trạng thái <em>Closed · Not planned</em>, và repo chưa có kết quả <code>TEST_FINAL</code>. Phép đo trên dùng dữ liệu tái dựng và bundle cục bộ với nhãn <code>EXPLORATORY_REBUILT_HOLDOUT</code>. Chỉ số tổng hợp ở trên mô tả lần chạy này.</p>
+          <p class="sources"><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/reports/validation-search.json">Số liệu Validation gốc</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/release/model-freeze.json">Hồ sơ đã ký</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/reports/error-analysis.md">Quy trình phân tích lỗi</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/issues/50">Trạng thái AFN-050</a> · <a href="#tai-lap-ml">Lệnh tái lập phép đo</a></p>
         </section>
 
         <section class="panel" id="ban-giao">
@@ -436,52 +581,117 @@
             <table>
               <thead><tr><th scope="col">Hạng mục</th><th scope="col">Tài liệu và cách nhận</th></tr></thead>
               <tbody>
-                <tr><th scope="row">Demo và đầu vào mẫu</th><td><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/demo-script.md">Kịch bản demo</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/tree/4175c97/tests/fixtures/pages">Trang và ảnh tổng hợp</a></td></tr>
+                <tr><th scope="row">Demo và đầu vào mẫu</th><td><a href="../docs/demo-script.md">Kịch bản demo</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/tree/4175c97/tests/fixtures/pages">Trang và ảnh tổng hợp</a></td></tr>
                 <tr><th scope="row">Mã nguồn tại lần đối chiếu</th><td><a href="https://github.com/ngnsusinn/anti-fake-news/tree/4175c97/extension">Tiện ích</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/tree/4175c97/backend">FastAPI</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/tree/4175c97/ml">Pipeline ML</a></td></tr>
-                <tr><th scope="row">Hướng dẫn cài đặt</th><td><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/local-setup.md">Chạy local</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/extension-setup.md">Nạp Extension</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/backend-setup.md">Chạy mô hình thật</a></td></tr>
-                <tr><th scope="row">Bundle và tập Test</th><td>Bundle nhận từ ML và đối chiếu với <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/reports/pre-test-signoff.md">biên bản freeze</a>. Payload Test được QA bàn giao riêng theo <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/ml-pipelines.md">quy trình đánh giá</a>.</td></tr>
+                <tr><th scope="row">Hướng dẫn cài đặt</th><td><a href="../docs/local-setup.md">Chạy local</a> · <a href="../docs/extension-setup.md">Nạp Extension</a> · <a href="../docs/backend-setup.md">Chạy mô hình thật</a></td></tr>
+                <tr><th scope="row">Tái lập đánh giá</th><td><a href="../scripts/evaluate_report_holdout.py">Mã đánh giá tổng hợp</a> · <a href="#tai-lap-ml">Lệnh tái lập</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/reports/pre-test-signoff.md">Biên bản AFN-049</a></td></tr>
               </tbody>
             </table>
           </div>
-          <details>
+          <figure class="diagram" id="cac-che-do">
+            <figcaption>Chọn cách chạy theo mục tiêu</figcaption>
+            <ul class="branches">
+              <li class="node"><strong><a href="#chay-mock">Demo mock</a></strong><small>Python + Chromium → API mock → nhãn Real và 42% cố định. Kiểm tra đường đi từ tab đến popup.</small></li>
+              <li class="node focus"><strong><a href="#chay-real">Demo real</a></strong><small>Thêm bundle Multimodal, SHA metadata và cache CLIP → API real → kết quả suy luận.</small></li>
+              <li class="node"><strong><a href="#tai-lap-ml">Pipeline ML</a></strong><small>Chuẩn bị dữ liệu → chạy Train/Validation và xuất bundle, hoặc tái lập phép đo holdout từ bundle sẵn có.</small></li>
+            </ul>
+          </figure>
+          <details id="chay-mock">
             <summary>Chạy demo mock từ PowerShell</summary>
-            <p>Tại thư mục gốc, dùng Python 3.13, cài dependencies và tạo <code>.env</code> nếu chưa có. Sao chép token vừa tạo vào <code>AFN_DEMO_TOKEN</code> trong <code>.env</code>. Đặt <code>AFN_ENVIRONMENT=dev</code>, <code>AFN_PREDICTOR_MODE=mock</code> và <code>AFN_PORT=8000</code>.</p>
+            <p>Mở PowerShell tại thư mục gốc repo. Dùng Python 3.13 và Chromium. Các biến môi trường bên dưới dùng trong terminal hiện tại và được ưu tiên hơn <code>.env</code>. Nếu thư mục đầu ra đã chứa gói với token cũ, chọn đường dẫn <code>--output</code> mới.</p>
             <div class="snippet">
-              <div class="snippet-bar"><span>PowerShell · Chuẩn bị và chạy Backend</span><button class="copy no-print" type="button">Sao chép</button></div>
+              <div class="snippet-bar"><span>Terminal A · Tạo môi trường và đóng gói tiện ích</span><button class="copy no-print" type="button">Sao chép</button></div>
               <pre><code><span class="kw">py</span> -3.13 -m venv .venv
 $AfnPython = (<span class="kw">Resolve-Path</span> ./.venv/Scripts/python.exe).Path
 &amp; $AfnPython -m pip install -r backend/requirements.txt
-<span class="kw">if</span> (-not (Test-Path .env)) { Copy-Item .env.example .env }
-&amp; $AfnPython -c <span class="str">"import secrets; print(secrets.token_urlsafe(32))"</span>
-<span class="muted"># Cập nhật .env trước khi chạy dòng bên dưới.</span>
+$env:AFN_HOST = <span class="str">'127.0.0.1'</span>
+$env:AFN_PORT = <span class="str">'8000'</span>
+$env:AFN_ENVIRONMENT = <span class="str">'dev'</span>
+$env:AFN_PREDICTOR_MODE = <span class="str">'mock'</span>
+$env:AFN_DEMO_TOKEN = &amp; $AfnPython -c <span class="str">"import secrets; print(secrets.token_urlsafe(32))"</span>
+&amp; $AfnPython scripts/package_extension.py --output cache/extension-demo</code></pre>
+            </div>
+            <p>Trong <code>chrome://extensions</code>, bật <strong>Developer mode</strong>, chọn <strong>Load unpacked</strong> và nạp <code>cache/extension-demo/</code>. Sao chép ID tiện ích và thay <code>&lt;ID&gt;</code> trong lệnh dưới. Chạy tiếp trong terminal A để Backend dùng cùng token với gói.</p>
+            <div class="snippet">
+              <div class="snippet-bar"><span>Terminal A · Khởi động Backend</span><button class="copy no-print" type="button">Sao chép</button></div>
+              <pre><code>$env:AFN_EXTENSION_ORIGIN = <span class="str">'chrome-extension://&lt;ID&gt;'</span>
 <span class="kw">Push-Location</span> backend
 <span class="kw">try</span> { &amp; $AfnPython -m app } <span class="kw">finally</span> { Pop-Location }</code></pre>
             </div>
-            <p>Ở terminal khác, đóng gói tiện ích rồi phục vụ trang mẫu. Trong <code>chrome://extensions</code>, bật <strong>Developer mode</strong>, chọn <strong>Load unpacked</strong> và nạp <code>release/extension/</code>. Mở <code>http://127.0.0.1:8765/article.html</code>, bấm tiện ích rồi bấm <strong>Phân tích</strong>. Kết quả mô phỏng là <strong>Real · 42%</strong>.</p>
+            <p>Từ terminal B ở gốc repo, kiểm health trả <code>model_ready=true</code> và <code>X-AFN-Inference-Mode: mock</code>, sau đó phục vụ trang mẫu.</p>
             <div class="snippet">
-              <div class="snippet-bar"><span>PowerShell · Đóng gói và mở fixture</span><button class="copy no-print" type="button">Sao chép</button></div>
-              <pre><code>$AfnPython = (<span class="kw">Resolve-Path</span> ./.venv/Scripts/python.exe).Path
-&amp; $AfnPython scripts/package_extension.py
+              <div class="snippet-bar"><span>Terminal B · Kiểm health và phục vụ trang mẫu</span><button class="copy no-print" type="button">Sao chép</button></div>
+              <pre><code><span class="kw">curl.exe</span> -i http://127.0.0.1:8000/health
+$AfnPython = (<span class="kw">Resolve-Path</span> ./.venv/Scripts/python.exe).Path
 &amp; $AfnPython -m http.server 8765 --bind 127.0.0.1 --directory tests/fixtures/pages</code></pre>
+            </div>
+            <p>Mở <code>http://127.0.0.1:8765/article.html</code>, bấm tiện ích rồi chọn <strong>Phân tích</strong>. Popup hiển thị <strong>Real · 42%</strong> và <strong>Kết quả giả lập</strong>. Chọn <strong>Xem chi tiết</strong> để đối chiếu nội dung và ảnh.</p>
+          </details>
+          <details id="chay-real">
+            <summary>Chuyển từ mock sang mô hình thật</summary>
+            <p>Dừng Backend mock bằng Ctrl+C. Giữ terminal A, token, origin và gói Chromium đã nạp. Cài bộ phụ thuộc ML. Nếu cache CLIP chưa có, chạy <code>scripts/smoke_clip.py</code> với mạng trước khi chạy offline. Lệnh dưới chuẩn bị môi trường và kiểm cache.</p>
+            <div class="snippet">
+              <div class="snippet-bar"><span>Terminal A · Dependencies và CLIP</span><button class="copy no-print" type="button">Sao chép</button></div>
+              <pre><code>&amp; $AfnPython -m pip install -r backend/requirements.txt -r ml/requirements.txt
+$env:HF_HOME = <span class="kw">Join-Path</span> (Get-Location).Path <span class="str">'cache/huggingface'</span>
+&amp; $AfnPython scripts/smoke_clip.py --offline --repeat 1</code></pre>
+            </div>
+            <p>Đặt bundle Multimodal tin cậy tại <code>backend/artifacts/multimodal</code> hoặc thay đường dẫn trong lệnh theo bundle đã xuất. Với bundle nhận qua bàn giao, đối chiếu SHA-256 metadata với giá trị do người bàn giao cung cấp. Bản AFN-049 đã ký cũng giữ metadata <code>candidate</code>, nên cần bật đúng cờ bên dưới.</p>
+            <div class="snippet">
+              <div class="snippet-bar"><span>Terminal A · Production với bundle ứng viên</span><button class="copy no-print" type="button">Sao chép</button></div>
+              <pre><code>$AfnBundle = (<span class="kw">Resolve-Path</span> backend/artifacts/multimodal).Path
+$env:AFN_MODEL_ARTIFACT_PATH = $AfnBundle
+$env:AFN_MODEL_METADATA_SHA256 = (<span class="kw">Get-FileHash</span> (Join-Path $AfnBundle 'metadata.json')).Hash
+$env:AFN_ENVIRONMENT = <span class="str">'production'</span>
+$env:AFN_PREDICTOR_MODE = <span class="str">'real'</span>
+$env:AFN_ALLOW_CANDIDATE_MODEL = <span class="str">'true'</span>
+$env:HF_HUB_OFFLINE = <span class="str">'1'</span>
+<span class="kw">Push-Location</span> backend
+<span class="kw">try</span> { &amp; $AfnPython -m app } <span class="kw">finally</span> { Pop-Location }</code></pre>
+            </div>
+            <p>Kiểm <code>/health</code> từ terminal khác như bước mock. Kỳ vọng API v0.2.0, <code>model_ready=true</code>, <code>X-AFN-Inference-Mode: real</code> và <code>X-AFN-Model-State: ready</code>. Phân tích lại bài mẫu và đối chiếu phiên bản mô hình trong chi tiết với bundle.</p>
+          </details>
+          <details id="tai-lap-ml">
+            <summary>Tái dựng dữ liệu, huấn luyện và chạy holdout</summary>
+            <p>Tại gốc repo, dùng môi trường Python có phụ thuộc ML và cache CLIP đã chuẩn bị. <code>ml.prepare_dataset</code> yêu cầu thư mục đầu ra mới. Sau khi chuẩn bị, chỉ truyền các file trong <code>train-validation/</code> vào lệnh huấn luyện và xuất bundle.</p>
+            <div class="snippet">
+              <div class="snippet-bar"><span>PowerShell · Dữ liệu, huấn luyện, xuất bundle</span><button class="copy no-print" type="button">Sao chép</button></div>
+              <pre><code>$AfnPython = (<span class="kw">Resolve-Path</span> ./.venv/Scripts/python.exe).Path
+$env:HF_HOME = (<span class="kw">Resolve-Path</span> cache/huggingface).Path
+$env:HF_HUB_OFFLINE = <span class="str">'1'</span>
+$AfnDataset = <span class="str">'cache/afn-report-ml-v2'</span>
+&amp; $AfnPython -m ml.prepare_dataset --manifest data/processed/manifest.json --groups data/processed/groups.json --image-root data --out $AfnDataset
+$AfnParts = Join-Path $AfnDataset <span class="str">'train-validation'</span>
+&amp; $AfnPython -m ml.run_experiments --manifest "$AfnParts/manifest.jsonl" --split "$AfnParts/split.csv" --image-root data --offline
+&amp; $AfnPython -m ml.export_artifacts --manifest "$AfnParts/manifest.jsonl" --split "$AfnParts/split.csv" --image-root data --offline --out cache/afn-report-bundles</code></pre>
+            </div>
+            <p><code>run_experiments</code> lưu lưới C/ngưỡng và số đo Validation trong <code>cache/runs/</code>. Bundle xuất mới dùng cho demo. Để tái lập đúng bảng holdout trong báo cáo, dùng ba bundle sẵn có trong <code>backend/artifacts/</code> với bộ tham số khớp AFN-049. Trình đánh giá dùng hash tham số để xác định phép đo, cho phép metadata khác và ghi JSON tổng hợp.</p>
+            <div class="snippet">
+              <div class="snippet-bar"><span>PowerShell · Chấm holdout tái dựng</span><button class="copy no-print" type="button">Sao chép</button></div>
+              <pre><code>&amp; $AfnPython -m scripts.evaluate_report_holdout --dataset $AfnDataset --bundle-root backend/artifacts --image-root data --out cache/afn-report-holdout.json</code></pre>
             </div>
           </details>
           <details>
-            <summary>Tái chạy kiểm thử và phép đo</summary>
-            <p>Dùng môi trường đã cài phụ thuộc Backend và ML, Node với Playwright/Chromium theo hướng dẫn, cache CLIP đã ghim và bundle ứng viên thật. Gọi benchmark từ máy cần đo. Tệp JSON trong <code>cache/</code> chứa các lượt riêng lẻ.</p>
+            <summary>Tái chạy smoke và benchmark</summary>
+            <p>Kiểm thử Chromium cần Node + Playwright theo hướng dẫn của repo. Runner HTTP chạy trên CPU với CLIP offline và bundle ứng viên thật. Tệp JSON benchmark chứa từng lượt và thông tin máy.</p>
             <div class="snippet">
               <div class="snippet-bar"><span>PowerShell · Smoke và benchmark</span><button class="copy no-print" type="button">Sao chép</button></div>
-              <pre><code><span class="kw">python</span> scripts/test_extension_smoke.py
-$env:HF_HOME = (<span class="kw">Resolve-Path</span> cache/huggingface).Path
-$env:HF_HUB_OFFLINE = <span class="str">'1'</span>
-<span class="kw">python</span> scripts/benchmark_local.py --bundle backend/artifacts/multimodal --candidate --repeat 20 --threads 4 --out cache/html-report/benchmark.json</code></pre>
+              <pre><code>&amp; $AfnPython scripts/test_extension_smoke.py
+$AfnBundle = (<span class="kw">Resolve-Path</span> backend/artifacts/multimodal).Path
+$AfnPin = (<span class="kw">Get-FileHash</span> (Join-Path $AfnBundle 'metadata.json')).Hash
+<span class="kw">Push-Location</span> backend
+<span class="kw">try</span> {
+  &amp; $AfnPython tests/smoke_local.py --bundle $AfnBundle --candidate --production --metadata-sha256 $AfnPin
+} <span class="kw">finally</span> { Pop-Location }
+&amp; $AfnPython scripts/benchmark_local.py --bundle $AfnBundle --candidate --repeat 20 --threads 4 --out cache/afn-report-benchmark.json</code></pre>
             </div>
-            <p>Với demo mô hình thật, đặt origin theo ID tiện ích và dùng cùng token. Kiểm tra <code>/health</code> báo <code>model_ready=true</code> và header <code>X-AFN-Inference-Mode: real</code>. Khi có gói đúng hồ sơ, xác minh byte tệp theo hồ sơ bằng <code>ml.freeze verify</code>, rồi làm theo quy trình AFN-050 với payload QA đã duyệt.</p>
+            <p class="sources"><a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/extension-w1.md">Thiết lập Playwright và Chromium</a> · <a href="https://github.com/ngnsusinn/anti-fake-news/blob/4175c97/docs/ml-pipelines.md">Quy trình ML và Test chính thức</a></p>
           </details>
         </section>
       </main>
     </div>
 
-    <footer>Đối chiếu dự án tại commit <a href="https://github.com/ngnsusinn/anti-fake-news/commit/4175c974e69d9364aff4428aade3acb7e39f4824"><code>4175c97</code></a>. Mẫu HTML tham khảo từ <a href="https://github.com/Sologa/codex-html-report-skill">codex-html-report-skill</a>.</footer>
+    <footer>Mã triển khai đối chiếu trên <a href="https://github.com/ngnsusinn/anti-fake-news/commit/4175c974e69d9364aff4428aade3acb7e39f4824"><code>origin/main@4175c97</code></a>. Xem báo cáo và các chỉnh sửa tài liệu tại <a href="https://github.com/ngnsusinn/anti-fake-news/pull/121/files">pull request #121</a>. Mẫu HTML tham khảo từ <a href="https://github.com/Sologa/codex-html-report-skill">codex-html-report-skill</a>.</footer>
   </div>
   <script>
     const root = document.documentElement;
@@ -529,8 +739,11 @@ $env:HF_HUB_OFFLINE = <span class="str">'1'</span>
 
     const sectionLinks = document.querySelectorAll('.toc a');
     function syncLocation() {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target?.tagName === 'DETAILS') target.open = true;
+      const section = target?.closest('main > section');
       sectionLinks.forEach(link => {
-        if (link.hash === location.hash) link.setAttribute('aria-current', 'location');
+        if (section && link.hash === '#' + section.id) link.setAttribute('aria-current', 'location');
         else link.removeAttribute('aria-current');
       });
     }
