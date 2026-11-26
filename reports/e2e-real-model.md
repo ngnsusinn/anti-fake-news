@@ -28,8 +28,8 @@ hoặc tiêu chí được hai bên cập nhật.
 ## Chạy và lưu bằng chứng
 
 1. Bundle đã qua kiểm hash và nạp bằng loader theo [audit #58](evaluation-audit.md).
-   Cần cache CLIP theo [hướng dẫn Backend](../docs/backend-setup.md) và hoàn tất
-   `ml.freeze verify` khi có đủ hai tệp Train/Val. Đối chiếu metadata SHA-256
+   Cache CLIP và hai tệp Train/Val đã được đối chiếu hash. `ml.freeze verify`
+   trên hồ sơ nháp đã đạt. Khi diễn tập, đối chiếu metadata SHA-256
    `6cd766a982015fb661f7eee8a5aa1317f05efc562769f8a13ba054e572fc09d5`
    và model version. Giải quyết yêu cầu trạng thái bundle `candidate`/ `frozen`
    giữa [biên bản #49](pre-test-signoff.md) và [checklist gói #54](../release/backend-checklist.md).
@@ -47,6 +47,9 @@ hoặc tiêu chí được hai bên cập nhật.
    production, thiếu bundle phải dừng khởi động.
 
 Lượt này Node **12/12** trên API client, phục hồi lỗi, lifecycle và result view.
-Browser thật, mô hình nghiên cứu và các ca demo thủ công chưa chạy. Bằng chứng
+Smoke Backend production offline dùng cache CLIP ghim và bundle nghiên cứu.
+Health 200 real/ready, thiếu token 401 và predict 200 với
+`afn-multimodal` / `multimodal-20261126-105d5f14e79a` trên đầu vào tổng hợp.
+Chromium và các ca demo thủ công chưa chạy trong lượt này. Bằng chứng
 tích hợp [#39](backend-integration.md) dùng bản ứng viên trước, cùng
 [ma trận #45](regression-matrix.md) làm tài liệu tham chiếu.

@@ -27,8 +27,8 @@ chế khả năng suy rộng. [Tổng hợp dữ liệu #46](final-data-summary.
 | RQ3 · Khi nào hai cấu hình bất đồng? | Đối chiếu hai cấu hình theo ID, đếm cả hai đúng/sai và hai nhóm chỉ một mô hình đúng. | [#47](error-analysis.md) đã có phương pháp và kiểm thử fixture. Chưa có phân tích lỗi Test. |
 
 Ứng viên hoàn tất lựa chọn và kiểm parity trên Validation. Bằng chứng
-Validation phục vụ chọn cấu hình. Bundle đã qua xác minh hash và loader. Hồ sơ freeze còn thiếu manifest/split
-Train/Val để chạy đủ verify và ký QA. #50 và [audit #58](evaluation-audit.md) còn chờ. Việc diễn giải
+Validation phục vụ chọn cấu hình. Bundle đã qua xác minh hash và loader. Đã đối chiếu manifest/split
+Train/Val và `ml.freeze verify --allow-unsigned` đã đạt. Hồ sơ chờ QA ký. #50 và [audit #58](evaluation-audit.md) còn chờ. Việc diễn giải
 chỉ áp dụng cho nhiệm vụ phân loại đối chiếu nhãn nguồn. `fake_score` chưa
 hiệu chuẩn thành xác suất. Kiểm chứng sự thật và phát hiện ảnh chỉnh sửa
 cần bằng chứng và quy trình riêng.

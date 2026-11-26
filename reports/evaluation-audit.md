@@ -6,7 +6,7 @@
 | Hạng mục | Kết quả |
 | --- | --- |
 | Hash public trên snapshot | **15/15 khớp:** 13 hash tệp mã/cấu hình, hash tệp lựa chọn và canonical hash của hồ sơ trong chữ ký ML. Tính trên byte UTF-8 của đúng revision. |
-| Bản freeze | [Hồ sơ](../release/model-freeze.json) `draft`. ML đã ký canonical hash `7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8`. Ba bundle đã qua 13/13 phép so SHA-256 và nạp được bằng loader của repo. Còn thiếu manifest Train/Val và CSV split đã ẩn Test ID. [Biên bản #49](pre-test-signoff.md). |
+| Bản freeze | [Hồ sơ](../release/model-freeze.json) `draft`. ML đã ký canonical hash `7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8`. Ba bundle đã qua 13/13 phép so SHA-256 và nạp được bằng loader của repo. Manifest Train/Val và CSV split đã ẩn Test ID đã được bàn giao. Cả hai hash khớp và `ml.freeze verify --allow-unsigned` trả exit 0. Chờ QA duyệt và ký. [Biên bản #49](pre-test-signoff.md). |
 | Dữ liệu / nguy cơ rò rỉ | Split `ml-v2`, run `20261126T024649Z`. Audit [#29](leakage-audit.md) ghi 21 hostname publisher có mặt ở nhiều split và thiếu event ID. Ghi giới hạn này trong diễn giải Test. |
 | Test cuối | Chưa có `test-metrics.json` hoặc predictions #50 được bàn giao. Chưa có kết quả, số đếm hoặc ma trận Test có thể nghiệm thu. |
 | Công cụ audit | [`audit_test_predictions.py`](../scripts/audit_test_predictions.py) đối chiếu chữ ký, thứ tự thời gian, hash tập tin, log rerun, split và cùng ID/nhóm. Tái tính macro-F1, accuracy, metric từng lớp, ma trận và Δ của ba cấu hình từ nhãn lưu và kiểm từng điểm theo ngưỡng đã ký. |
@@ -20,11 +20,14 @@ Công cụ chỉ mở hồ sơ và các tệp bàn giao CSV/JSON/JSONL, không n
 
 Đã chạy `python -B -m ml.freeze verify --record release/model-freeze.json
 --bundle-root <bundle-root> --allow-unsigned` trên Windows với Python 3.13.17
-và bản mã LF có hash đúng hồ sơ. Kết quả exit 1, chỉ báo thiếu
-`train-validation/manifest.jsonl` và `train-validation/split.csv`.
+và bản mã LF có hash đúng hồ sơ. Lượt đầu báo thiếu `train-validation/manifest.jsonl` và
+`train-validation/split.csv`. Sau khi nhận đúng hai tệp và truyền `--manifest`
+và `--split`, lệnh trả exit 0 với `freeze record matches the files on disk`.
 Đã xác nhận thêm loader trả đúng ID/version của cả ba bundle. Checkout Windows
 ban đầu có CRLF ở 14 tệp mã/cấu hình. Sau khi đối chiếu với byte LF,
-cả 14 tệp khớp hash. Kết quả xác minh bundle chưa mở cổng Test.
+cả 14 tệp khớp hash. Backend production dùng cùng bản Multimodal và cache CLIP đã ghim đã
+trả health 200/real/ready, predict 401 khi thiếu token và predict 200 với
+đúng model ID/version trên đầu vào tổng hợp. Test vẫn khóa, chờ chữ ký QA.
 
 ## Chạy audit sau bàn giao #50
 

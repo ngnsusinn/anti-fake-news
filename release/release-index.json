@@ -14,16 +14,20 @@
     "bundle_verified_on_clean_machine": false,
     "handoff_bundle_hashes_verified": 13,
     "handoff_bundles_loaded": 3,
-    "pending_handoff_files": [
-      "train-validation/manifest.jsonl",
-      "train-validation/split.csv"
-    ]
+    "unsigned_verify_passed": true
   },
   "demo_model": {
     "id": "afn-multimodal",
     "version": "multimodal-20261126-105d5f14e79a",
     "bundle_status": "candidate",
-    "metadata_sha256": "6cd766a982015fb661f7eee8a5aa1317f05efc562769f8a13ba054e572fc09d5"
+    "metadata_sha256": "6cd766a982015fb661f7eee8a5aa1317f05efc562769f8a13ba054e572fc09d5",
+    "backend_production_smoke": {
+      "status": "passed",
+      "scope": "offline CLIP, loopback, synthetic input",
+      "health_status": 200,
+      "predict_without_token_status": 401,
+      "predict_status": 200
+    }
   },
   "data_index": "release/data-manifest-index.json",
   "checks": [
@@ -31,7 +35,7 @@
       "issue": 43,
       "status": "blocked",
       "report": "reports/e2e-real-model.md",
-      "awaiting": "Chromium demo, validation of CLIP cache, and confirmation of editable input flow"
+      "awaiting": "Chromium demo and confirmation of editable input flow"
     },
     {
       "issue": 44,
@@ -43,7 +47,7 @@
       "issue": 58,
       "status": "blocked",
       "report": "reports/evaluation-audit.md",
-      "awaiting": "Train/Validation manifest and ID-withheld split, QA freeze signature, and final Test predictions/metrics"
+      "awaiting": "QA freeze signature and final Test predictions/metrics"
     },
     {
       "issue": 59,

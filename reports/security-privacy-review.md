@@ -21,7 +21,10 @@ QA `dangnguyen0512`, reviewer DATA `locnguyen230`. Snapshot
 - [QA API #28](api-contract-results.md) ghi kết quả 401 thiếu/sai token và
   503 khi chưa sẵn sàng ở commit trước. [CORS unit](../backend/tests/test_cors.py)
   và [config unit](../backend/tests/test_config.py) có ca preflight, token và
-  giới hạn bind. Hai suite Backend chưa chạy lại trong lượt này.
+  giới hạn bind. Đã chạy `python -B -m pytest -q tests/test_cors.py tests/test_config.py tests/test_lifespan_logging.py`
+  trong `backend/`. **38/38 PASS** trên Windows với Python 3.13.17. Smoke
+  production loopback trả 401 khi thiếu token và 200 với token tạm cùng bundle
+  ghim. Còn ca CORS với Extension đóng gói và rà quyền dữ liệu.
 - Trên cùng gói demo, Backend `Phuc1232` và QA ghi origin quan sát được,
   mã HTTP và header CORS cho preflight hợp lệ và origin khác. Thử POST thiếu,
   sai và đúng token bằng đầu vào tổng hợp. Xác nhận địa chỉ listen loopback
