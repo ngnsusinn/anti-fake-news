@@ -109,7 +109,7 @@ AFN_MODEL_ARTIFACT_PATH=cache/ml-fixture-bundles/multimodal
 
 ### Dùng bundle dự án đã chốt
 
-Lấy bundle Multimodal tin cậy đã freeze cùng SHA-256 của `metadata.json` từ bàn giao #49. Đối chiếu hash với `Get-FileHash` và kiểm tra metadata có `status: frozen`, `is_fixture: false`. Đặt bundle ở `backend/artifacts/multimodal/` hoặc dùng đường dẫn tuyệt đối. Cấu hình `AFN_ENVIRONMENT=demo`, `AFN_PREDICTOR_MODE=real`, `AFN_MODEL_ARTIFACT_PATH=backend/artifacts/multimodal` (đổi theo vị trí thực tế), rồi khởi động Backend với cache CLIP tương ứng. Có thể đặt `$env:HF_HUB_OFFLINE = '1'` trong terminal Backend để chạy offline.
+Lấy bundle Multimodal tin cậy cùng SHA-256 của `metadata.json` từ [biên bản đã ký #49](../reports/pre-test-signoff.md). Đối chiếu hash với `Get-FileHash`. Bundle ghi trong biên bản giữ `status: candidate` và `is_fixture: false`. Đặt bundle ở `backend/artifacts/multimodal/` hoặc dùng đường dẫn tuyệt đối. Với cấu hình production, đặt `AFN_ENVIRONMENT=production`, `AFN_PREDICTOR_MODE=real`, `AFN_ALLOW_CANDIDATE_MODEL=true`, `AFN_MODEL_METADATA_SHA256` theo biên bản và `AFN_MODEL_ARTIFACT_PATH` theo vị trí bundle. Dùng cùng token với Extension, đặt `AFN_EXTENSION_ORIGIN` theo ID đã nạp và khởi động Backend với cache CLIP đã ghim. Đặt `$env:HF_HUB_OFFLINE = '1'` trong terminal Backend để dùng cache offline.
 
 Dùng `/health` kiểm tra mode `real` và trạng thái `ready` trước khi gửi bài. Xem [bàn giao Backend](backend-setup.md) để kiểm cache, checksum và chạy smoke trên bundle chính thức.
 
