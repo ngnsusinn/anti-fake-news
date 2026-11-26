@@ -27,4 +27,5 @@ flowchart LR
     Audit --> Report["#59 và #60: báo cáo và nghiệm thu"]
 ```
 
-Hiện hồ sơ đã có chữ ký ML. [Biên bản trước Test](reports/pre-test-signoff.md)
+Hồ sơ đã có cả hai chữ ký. QA tái tính từ predictions và khớp metrics của ML.
+[Bằng chứng #58](reports/evaluation-audit.md) · [Biên bản trước Test](reports/pre-test-signoff.md)

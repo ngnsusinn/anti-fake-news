@@ -116,4 +116,4 @@ Chi tiết triển khai nằm trong [DESIGN.md](DESIGN.md).
 
 Luồng phát hành hiện mở popup một nút, tự trích nội dung và chọn ảnh. F02–F03
 và F07 còn cần xác nhận các tiêu chí sửa/dán, chọn/tải tay và giữ bản nhập
-trên gói demo. F08 chờ đủ chữ ký freeze và kết quả Test đã audit. [Truy vết F01–F08 và T01–T12](reports/final-report.md#demo-hiệu-năng-và-truy-vết-yêu-cầu)
+trên gói demo. F08 đã có freeze đủ chữ ký và audit Test qua 33/33 ID, chờ ML review. [Truy vết F01–F08 và T01–T12](reports/final-report.md#demo-hiệu-năng-và-truy-vết-yêu-cầu)

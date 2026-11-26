@@ -73,5 +73,5 @@ Nội dung này tương ứng với trang 3–6 của [bài trình bày](slides/
 
 Bản unpacked dùng popup và tự chọn ảnh hợp lệ đầu tiên. Flow màn hình phân
 tích ở §1 vẫn là thiết kế dùng để đối chiếu nhập/sửa/chọn thủ công.
-Backend đã có chế độ production với warm-up và kiểm hash metadata. Luồng
-Test cuối chờ hồ sơ freeze đủ chữ ký ML và QA. [Sơ đồ bản đang nghiệm thu](DIAGRAMS.md) · [Bằng chứng QA](reports/final-report.md)
+Backend đã có chế độ production với warm-up và kiểm hash metadata. ML đã chạy Test cuối sau khi merge freeze đủ chữ ký.
+QA tái tính metrics từ predictions đã lưu và chờ ML review. [Sơ đồ bản đang nghiệm thu](DIAGRAMS.md) · [Bằng chứng QA](reports/final-report.md)

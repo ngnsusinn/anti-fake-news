@@ -1,47 +1,35 @@
 # AFN-058 · Audit freeze và kết quả Test
 
-**26/11/2026 · BLOCKED với Test thật.** QA `dangnguyen0512`, reviewer ML
-`0xDa1Vu`. Snapshot [`aefb0ef`](https://github.com/ngnsusinn/anti-fake-news/commit/aefb0efc2b18fbb3a06d1766d1471ec188933eaf).
+**26/11/2026 · PASS kỹ thuật trên 33 mẫu, chờ ML review.** QA
+`dangnguyen0512`, reviewer `0xDa1Vu`. Freeze ký đủ trên
+[`main 4175c97`](https://github.com/ngnsusinn/anti-fake-news/commit/4175c974e69d9364aff4428aade3acb7e39f4824).
+Đầu vào kết quả ML lấy từ [PR #123](https://github.com/ngnsusinn/anti-fake-news/pull/123)
+tại [`657bfe7`](https://github.com/ngnsusinn/anti-fake-news/commit/657bfe7360ee434eab64cd655c8d6e5a9dec6c71).
 
 | Hạng mục | Kết quả |
 | --- | --- |
-| Hash public trên snapshot | **15/15 khớp:** 13 hash tệp mã/cấu hình, hash tệp lựa chọn và canonical hash của hồ sơ trong chữ ký ML. Tính trên byte UTF-8 của đúng revision. |
-| Bản freeze | [Hồ sơ](../release/model-freeze.json) `draft`. ML đã ký canonical hash `7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8`. Ba bundle đã qua 13/13 phép so SHA-256 và nạp được bằng loader của repo. Manifest Train/Val và CSV split đã ẩn Test ID đã được bàn giao. Cả hai hash khớp và `ml.freeze verify --allow-unsigned` trả exit 0. Chờ QA duyệt và ký. [Biên bản #49](pre-test-signoff.md). |
-| Dữ liệu / nguy cơ rò rỉ | Split `ml-v2`, run `20261126T024649Z`. Audit [#29](leakage-audit.md) ghi 21 hostname publisher có mặt ở nhiều split và thiếu event ID. Ghi giới hạn này trong diễn giải Test. |
-| Test cuối | Chưa có `test-metrics.json` hoặc predictions #50 được bàn giao. Chưa có kết quả, số đếm hoặc ma trận Test có thể nghiệm thu. |
-| Công cụ audit | [`audit_test_predictions.py`](../scripts/audit_test_predictions.py) đối chiếu chữ ký, thứ tự thời gian, hash tập tin, log rerun, split và cùng ID/nhóm. Tái tính macro-F1, accuracy, metric từng lớp, ma trận và Δ của ba cấu hình từ nhãn lưu và kiểm từng điểm theo ngưỡng đã ký. |
+| Freeze và phiên bản | `ml.freeze verify` trả 0 với hai chữ ký và cả ba bundle. SHA-256 byte của hồ sơ cũng trùng `inputs.freeze_sha256` trong #50. C, ngưỡng, model ID/version, 13 hash tệp mã/cấu hình, tệp lựa chọn, manifest Train/Val và split ẩn Test ID khớp đúng hồ sơ. |
+| Thời gian và log chạy | Test lúc 14:24:20 UTC+7 ngày 26/11, sau hai chữ ký. Marker và JSON cùng thời điểm. Một lượt `first run`, `refit: false`. |
+| Predictions và chia tập | 33 ID duy nhất, 33 nhóm, 17 fake và 16 real. Train/Val giữ nguyên. Dùng 33 nhóm duy nhất làm khóa để điền lại ID Test vào bản CSV ẩn từ predictions đã khớp hash. CSV tái tạo trùng SHA-256 được #50 ghi cho CSV QA đầy đủ. Công cụ đối chiếu coverage, ID/nhóm, mapping, nhãn theo ngưỡng và phiên bản ở từng dự đoán. |
+| Metrics | Tái tính accuracy, Macro-F1, precision/recall/F1/support và ma trận cả ba cấu hình. Khớp metrics và ba CSV tổng hợp của #50. Δ Macro-F1 Multimodal − Text-only = **−0,0935**. |
+| Giới hạn | 21 hostname publisher vắt qua các split và thiếu event ID. Audit đối chiếu nhãn đã lưu và split. Hash manifest Test được ghi trong #50, còn việc đối chiếu byte của chính manifest Test cần bản bàn giao riêng nếu reviewer yêu cầu. [Audit dữ liệu #29](leakage-audit.md) |
 
-Đã chạy `python -m unittest discover -s tests -p test_audit_test_predictions.py -v`:
-**7/7** trên fixture tổng hợp, gồm Δ âm, ngưỡng bằng điểm, sai hash hoặc ID
-trùng, nhãn sai, metrics lệch, thời điểm trước ký và rerun thiếu lý do.
-Công cụ chỉ mở hồ sơ và các tệp bàn giao CSV/JSON/JSONL, không nạp model.
+| Tệp dùng trong audit | SHA-256 |
+| --- | --- |
+| Freeze hai chữ ký | `cc583fc991612874c1b465939aa74485fd3fe6fb8527b0df731b493239951518` |
+| Predictions #50 | `75ad8eae9f9bc346be2deca5ea8c3628edc1327058c4ccf88e137f94640bfe82` |
+| CSV đã ẩn ID Test | `81058045c8397ed9cce8645267466e79a2fc346606865e05ade9b303b77b9c1f` |
+| CSV QA đầy đủ, khôi phục theo nhóm | `5594cda3a17d37b1d39d93315125030d0229d7ef03ffb6551efa5fba2ee1be73` |
 
-## Xác minh gói bàn giao #49
-
-Đã chạy `python -B -m ml.freeze verify --record release/model-freeze.json
---bundle-root <bundle-root> --allow-unsigned` trên Windows với Python 3.13.17
-và bản mã LF có hash đúng hồ sơ. Lượt đầu báo thiếu `train-validation/manifest.jsonl` và
-`train-validation/split.csv`. Sau khi nhận đúng hai tệp và truyền `--manifest`
-và `--split`, lệnh trả exit 0 với `freeze record matches the files on disk`.
-Đã xác nhận thêm loader trả đúng ID/version của cả ba bundle. Checkout Windows
-ban đầu có CRLF ở 14 tệp mã/cấu hình. Sau khi đối chiếu với byte LF,
-cả 14 tệp khớp hash. Backend production dùng cùng bản Multimodal và cache CLIP đã ghim đã
-trả health 200/real/ready, predict 401 khi thiếu token và predict 200 với
-đúng model ID/version trên đầu vào tổng hợp. Test vẫn khóa, chờ chữ ký QA.
-
-## Chạy audit sau bàn giao #50
-
-ML bàn giao metrics, predictions, CSV split QA và CSV split Train/Val đã
-ẩn Test ID qua kho riêng. QA đối chiếu bundle, mã, config và hash
-manifest/split với hồ sơ đã ký bằng `python -m ml.freeze verify --bundle-root backend/artifacts`
-cùng các đường dẫn bàn giao nếu khác mặc định. Đối chiếu hash manifest Test
-và hash code/bundle của đợt chạy đã lưu trước khi nhập báo cáo cuối.
-Từ repo chạy:
+## Tái kiểm
 
 ```powershell
-python scripts/audit_test_predictions.py --freeze release/model-freeze.json --metrics reports/test-metrics.json --predictions reports/test-predictions.jsonl --locked-split data/private/ml-v2/train-validation/split.csv --qa-split data/private/ml-v2/qa-only/split.csv
+python -B scripts/audit_test_predictions.py --freeze release/model-freeze.json --metrics reports/test-metrics.json --predictions <predictions> --locked-split <id-withheld-csv> --qa-split <qa-csv>
 ```
 
-Giữ predictions và split chứa ID trong vùng bàn giao riêng. Lưu kết quả
-tổng hợp, hash, giờ chạy, reviewer và lý do kỹ thuật của mọi lượt rerun.
-Sai hash, version, mapping hoặc metrics thì ghi BLOCKED và báo ML. Công việc này không chạy lại suy luận hoặc điều chỉnh tham số bằng Test trong công việc này.
+Lệnh trả `PASS` trên dữ liệu Test đã lưu. Suite
+`python -B -m unittest discover -s tests -p test_audit_test_predictions.py -q`
+đạt 7/7 trên fixture tổng hợp, gồm hash sai, ID trùng, nhãn sai ngưỡng,
+metrics lệch, chạy trước ký và rerun thiếu lý do. Công cụ chỉ đọc dữ liệu
+đã lưu. Giữ CSV chứa ID và predictions ở kho riêng. ML review bằng chứng
+trước khi chuyển #58 sang Done. [Biên bản #49](pre-test-signoff.md)
