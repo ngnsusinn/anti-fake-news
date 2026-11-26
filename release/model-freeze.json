@@ -1,6 +1,6 @@
 {
   "schema": "afn-model-freeze-v1",
-  "status": "draft",
+  "status": "signed",
   "created_at": "2026-11-26T02:48:18Z",
   "evidence_kind": "VALIDATION_ONLY",
   "protocol": {
@@ -145,6 +145,11 @@
       "record_sha256": "7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8",
       "note": "ml-v2 split chosen by the team on 2026-11-26; protocol locked; Train/Val rerun 20261126T024649Z identical to 20261125T145232Z; parity PASS n=32 with ml.inference_parity reference and Backend BundlePredictor; Test never loaded"
     },
-    "qa": null
+    "qa": {
+      "by": "dangnguyen0512",
+      "at": "2026-11-26T04:19:45Z",
+      "record_sha256": "7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8",
+      "note": "QA approved after matching the locked Train/Validation manifest, ID-withheld split, source hashes and all three bundles. Offline production smoke served multimodal-20261126-105d5f14e79a. Known limits: 21 publisher hostnames across splits and no event IDs. Test remains locked pending merge."
+    }
   }
 }

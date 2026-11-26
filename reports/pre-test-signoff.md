@@ -1,6 +1,6 @@
 # Biên bản trước khi mở Test · AFN-049
 
-**26/11/2026 · ML đã ký, chờ QA ký. Test vẫn khóa.** Biên bản này đi kèm hồ sơ
+**26/11/2026 · ML và QA đã ký cùng một hồ sơ. Test chờ hồ sơ được merge.** Biên bản này đi kèm hồ sơ
 [`release/model-freeze.json`](../release/model-freeze.json) (schema `afn-model-freeze-v1`,
 `record_sha256` `7afd69de…`). #50 chỉ chạy khi hồ sơ có đủ chữ ký ML và QA, và
 `ml.freeze verify` khớp với các file trên đĩa.
@@ -38,11 +38,16 @@ cũng không đổi: phần hash trong model version giữ nguyên, chỉ ngày 
       cả với predictor tham chiếu (`ml.inference_parity`) lẫn `BundlePredictor` của Backend (#37).
 - [x] **Không refit Train+Val.** `refit_on_train_and_validation: false`. Mọi bundle ghi `fit_split: train`.
 - [x] **Mã đã commit.** Hồ sơ không còn blocker.
-- [ ] **Artifact demo trỏ đúng bản khóa.** Backend đặt `AFN_MODEL_METADATA_SHA256` bằng hash
-      Multimodal ở bảng trên và `AFN_ALLOW_CANDIDATE_MODEL=true`. Bundle giữ `status: candidate`
-      vì đổi sang `frozen` sẽ làm đổi hash đã ký. Backend dùng `ml.freeze verify` để kiểm bản
-      bundle nhận được.
-- [ ] **QA ký.** QA kiểm các mục trên trên cùng hồ sơ rồi ký.
+- [x] **Artifact demo trỏ đúng bản khóa.** Smoke Backend production offline dùng
+      `AFN_MODEL_METADATA_SHA256` như bảng trên và `AFN_ALLOW_CANDIDATE_MODEL=true`.
+      `GET /health` trả 200 real/ready, POST thiếu token trả 401 và POST hợp lệ trên
+      đầu vào tổng hợp trả 200 với đúng model ID/version. Bundle giữ `status: candidate`
+      để giữ nguyên hash đã ký. Diễn tập Chromium thuộc phạm vi #43.
+- [x] **QA ký.** `dangnguyen0512` xác nhận hồ sơ ngày 26/11/2026. QA đối chiếu 13/13
+      SHA-256 của ba bundle, hash manifest Train/Validation và split đã ẩn Test ID,
+      cùng các tệp mã/cấu hình đã ghim. `ml.freeze verify` trả mã 0 trước và sau
+      khi ký. Cả hai chữ ký có cùng canonical record hash.
+      [Bằng chứng QA](https://github.com/ngnsusinn/anti-fake-news/pull/119)
 
 ## Bàn giao bundle
 
