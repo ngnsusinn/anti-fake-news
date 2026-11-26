@@ -1,0 +1,149 @@
+{
+  "schema": "afn-model-freeze-v1",
+  "status": "draft",
+  "created_at": "2026-11-26T01:29:38Z",
+  "evidence_kind": "VALIDATION_ONLY",
+  "protocol": {
+    "path": "configs/experiment.yaml",
+    "sha256": "11dab478d6838c5872a2446d01d950382a51c4265298319d03cdb472f3aa29a8",
+    "status": "proposed",
+    "preprocess_version": "afn-preprocess-v1",
+    "seed": 42,
+    "refit_on_train_and_validation": false
+  },
+  "data": {
+    "manifest_sha256": "a42af272426dc73019dd1f7b010de9feb1f3fb67f8b2740c672f6a34a237f44a",
+    "split_sha256": "81058045c8397ed9cce8645267466e79a2fc346606865e05ade9b303b77b9c1f",
+    "n_train": 153,
+    "n_validation": 32,
+    "test_locked_rows": 33,
+    "split_unit": "group_id"
+  },
+  "selection": {
+    "path": "configs/selected-models.json",
+    "sha256": "1ffa9d7cea176c75a8d7c27063cf7a781b701afea511fcefcca2879ad09d7ea0",
+    "run_id": "20261125T145232Z",
+    "split": "validation",
+    "metric": "macro_f1"
+  },
+  "label_map": {
+    "0": "real",
+    "1": "fake"
+  },
+  "configurations": {
+    "text-only": {
+      "bundle_dir": "backend/artifacts/text_only",
+      "model_id": "afn-text-only",
+      "model_version": "text-only-20261125-275718e3163b",
+      "bundle_status": "candidate",
+      "is_fixture": false,
+      "C": 10.0,
+      "threshold": 0.6,
+      "feature_dim": 5000,
+      "validation_macro_f1": 0.6862745098039216,
+      "metadata_sha256": "94fc5e83c54b7310d41f61b0f7db02033fa3727a877e371702267de65c2cc468",
+      "files_sha256": {
+        "classifier/coef.npy": "5cb334faefffbfa4ece29c13ff685b308c6bdbaa79e97bcc1a85c5403ab82cb2",
+        "classifier/intercept.npy": "50f42059fd94024fe7153c012746446bc4f0eeb558573470ede76728f4455e0e",
+        "text/idf.npy": "ab4ef905e4a75f386609aa4a0972e65b19f49c5e1b39a8c8b9104b3853d7e405",
+        "text/vocabulary.json": "46bd5c3c93f14c5904021b0ca74348b845f6dbcc12d3efa97176620a25913ebb"
+      },
+      "encoder": null
+    },
+    "image-only": {
+      "bundle_dir": "backend/artifacts/image_only",
+      "model_id": "afn-image-only",
+      "model_version": "image-only-20261125-cd863cbaabf5",
+      "bundle_status": "candidate",
+      "is_fixture": false,
+      "C": 10.0,
+      "threshold": 0.3,
+      "feature_dim": 512,
+      "validation_macro_f1": 0.536231884057971,
+      "metadata_sha256": "9fb11c02b2501bdf7de2733b318a14cc0026e905431e33dfdbffba5d941b0d58",
+      "files_sha256": {
+        "classifier/coef.npy": "31883def629ca1fb5ed09206dcfd38ff3fb6672210134bcecfd5bb5020dc2a46",
+        "classifier/intercept.npy": "e59c6c1e2c3ad528b731be79a3a07740c35b7e10ca55bdeb3e66e23385a3c51a"
+      },
+      "encoder": {
+        "repo_id": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "processor_config_sha256": "910e70b3956ac9879ebc90b22fb3bc8a75b6a0677814500101a4c072bd7857bd",
+        "preprocess_version": "afn-preprocess-v1",
+        "dtype": "float32"
+      }
+    },
+    "multimodal": {
+      "bundle_dir": "backend/artifacts/multimodal",
+      "model_id": "afn-multimodal",
+      "model_version": "multimodal-20261125-105d5f14e79a",
+      "bundle_status": "candidate",
+      "is_fixture": false,
+      "C": 100.0,
+      "threshold": 0.7,
+      "feature_dim": 5512,
+      "validation_macro_f1": 0.6235294117647059,
+      "metadata_sha256": "a89325bcbb54f714c137c835253d741feef857b6d80d6550de70e9ad59869dd1",
+      "files_sha256": {
+        "classifier/coef.npy": "2a9d76dff5eb5222127b72f2de21b6495a78ba1ef5d50dd13bdbe9a170b6b318",
+        "classifier/intercept.npy": "b850f9c070dd810010cc80b0f1520a4fc3ef9d94be60312cf883854660f6e49c",
+        "text/idf.npy": "ab4ef905e4a75f386609aa4a0972e65b19f49c5e1b39a8c8b9104b3853d7e405",
+        "text/vocabulary.json": "46bd5c3c93f14c5904021b0ca74348b845f6dbcc12d3efa97176620a25913ebb"
+      },
+      "encoder": {
+        "repo_id": "openai/clip-vit-base-patch32",
+        "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+        "processor_config_sha256": "910e70b3956ac9879ebc90b22fb3bc8a75b6a0677814500101a4c072bd7857bd",
+        "preprocess_version": "afn-preprocess-v1",
+        "dtype": "float32"
+      }
+    }
+  },
+  "code": {
+    "git_commit": "32ec69397f52ad4889c50ba7e12eaaa8cf510625",
+    "uncommitted_changes": true,
+    "files_sha256": {
+      "backend/app/model_bundle.py": "b152851a237ae4696bf0b01090a167fe37067cc0cdf315eaeb2283bc377edc31",
+      "backend/app/preprocessing.py": "5d1b99bd15bb2b8c466cdcc04b8d7da554df3a5f9ace34ddd79669606ced72a9",
+      "configs/clip-reference.json": "97a4d7732dfb23694f2a3abc7ef5e0e8bafbaaec4b2ae2a77a2dbcdc0c2ef516",
+      "configs/experiment.yaml": "11dab478d6838c5872a2446d01d950382a51c4265298319d03cdb472f3aa29a8",
+      "ml/__init__.py": "888c2d91d9dbf3176cf7a27cf049122d121d2f697385eb020f3cd349704c97df",
+      "ml/common.py": "a3113fddd9fff7aec2be81382e0d018e94cd0be2fe4fd7aba7d7a65e48c093d3",
+      "ml/evaluate_test.py": null,
+      "ml/export_artifacts.py": "c11a02b2def899e8ae07e2ef85cca81a5fe4a71a82f88eb708612cdc5f16ee35",
+      "ml/extract_embeddings.py": "e3e534cc94d8da328c5253c4cf9aaf9854d7920e0d9adbde7093d1e0eda9d962",
+      "ml/freeze.py": "69d8acd7c523f99b8a5db95aaed48959a1facb2a318c44dddd71641e815aa00d",
+      "ml/train_image.py": "b31262a5b9c07bab4d95cf9bb945058f258fbd6076496854479dafef6faad92c",
+      "ml/train_multimodal.py": "cfbae9aa3dbcb4d1aeacef21f256fdd9c07ed5e3a73348a851b9052c71e42601",
+      "ml/train_text.py": "0139257857d8a716b477de3f3b2ee2280d387f868e663d5f4bd432ef77186693"
+    }
+  },
+  "evaluation": {
+    "module": "ml/evaluate_test.py",
+    "command": "python -m ml.evaluate_test --freeze release/model-freeze.json --bundle-root backend/artifacts --locked-split <train-validation/split.csv> --manifest <qa-only/manifest-test.jsonl> --split <qa-only/split.csv> --image-root data --offline --out-dir reports",
+    "labels": [
+      "fake",
+      "real"
+    ],
+    "positive_label": "fake",
+    "threshold_comparison": "greater_than_or_equal",
+    "metrics": [
+      "macro_f1",
+      "accuracy",
+      "per_class_precision_recall_f1_support",
+      "confusion_matrix_rows_true_cols_pred",
+      "delta_macro_f1_multimodal_minus_text"
+    ],
+    "runs_allowed": 1,
+    "rerun_policy": "technical failure only, with a recorded reason; never for tuning"
+  },
+  "blockers": [
+    "protocol status is 'proposed', expected 'locked'",
+    "pinned code files have uncommitted changes or git state is unknown",
+    "final Test command (ml/evaluate_test.py) is not in the code snapshot"
+  ],
+  "signoffs": {
+    "ml": null,
+    "qa": null
+  }
+}
