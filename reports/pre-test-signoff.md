@@ -2,8 +2,9 @@
 
 **26/11/2026 · BẢN NHÁP, CHƯA KÝ. Test vẫn khóa.** Biên bản này kèm hồ sơ
 [`release/model-freeze.json`](../release/model-freeze.json) (schema `afn-model-freeze-v1`).
-#50 chỉ chạy khi hồ sơ có chữ ký của cả ML và QA, và `ml.freeze verify` khớp với file
-trên đĩa. Bản nháp không cho phép chạy Test.
+#50 chỉ chạy khi hồ sơ có chữ ký của cả ML và QA, và `ml.freeze verify` đối chiếu
+thành công cả hash manifest Train/Validation và split CSV đã ẩn ID Test. Chạy lại
+`collect` sau khi merge để hồ sơ nháp ghi nhận hash của mã mới. Bản nháp không cho phép chạy Test.
 
 ## Hồ sơ freeze ghi gì
 
@@ -69,10 +70,12 @@ QA ký nghĩa là đã kiểm từng dòng dưới đây trên cùng hồ sơ.
 H=data/private/ml-v2/train-validation
 .venv/bin/python -m ml.freeze collect --bundle-root backend/artifacts \
     --manifest $H/manifest.jsonl --split $H/split.csv --out release/model-freeze.json --replace
-.venv/bin/python -m ml.freeze verify --bundle-root backend/artifacts --allow-unsigned
+.venv/bin/python -m ml.freeze verify --bundle-root backend/artifacts \
+    --manifest "$H/manifest.jsonl" --split "$H/split.csv" --allow-unsigned
 .venv/bin/python -m ml.freeze sign --role ml --by <github-login>
 .venv/bin/python -m ml.freeze sign --role qa --by <github-login> --note "<bằng chứng đã kiểm>"
-.venv/bin/python -m ml.freeze verify --bundle-root backend/artifacts
+.venv/bin/python -m ml.freeze verify --bundle-root backend/artifacts \
+    --manifest "$H/manifest.jsonl" --split "$H/split.csv"
 ```
 
 `collect` trả mã 2 khi còn blocker. `sign` từ chối khi còn blocker hoặc khi hai người ký hai
