@@ -2,6 +2,7 @@
 
 Run from backend with python tests/smoke_local.py. Use --bundle and
 --metadata-sha256 to verify an AFN-049 frozen, non-fixture multimodal bundle.
+Use --bundle and --candidate to smoke-test a real candidate in demo mode.
 """
 
 import argparse
@@ -22,34 +23,40 @@ from urllib.request import ProxyHandler, Request, build_opener
 from PIL import Image
 
 
-def read_frozen_metadata(bundle: Path, expected_hash: str) -> dict:
+def read_bundle_metadata(bundle: Path, expected_hash: str | None, expected_status: str) -> dict:
     content = (bundle / "metadata.json").read_bytes()
-    if hashlib.sha256(content).hexdigest() != expected_hash.lower():
-        raise ValueError("Bundle metadata SHA-256 differs from the approved value")
+    if expected_hash and hashlib.sha256(content).hexdigest() != expected_hash.lower():
+        raise ValueError("Bundle metadata SHA-256 differs from the supplied value")
     metadata = json.loads(content)
     if (not isinstance(metadata, dict)
             or metadata.get("schema_version") != "afn-model-bundle-v1"
-            or metadata.get("status") != "frozen"
+            or metadata.get("status") != expected_status
             or metadata.get("configuration") != "multimodal"
             or metadata.get("is_fixture") is not False
             or any(not isinstance(metadata.get(key), str) or not metadata[key].strip()
                    for key in ("model_id", "model_version"))):
-        raise ValueError("Expected an AFN-049 frozen, non-fixture multimodal bundle")
+        raise ValueError(f"Expected a non-fixture multimodal bundle with status {expected_status}")
     return metadata
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("real", "mock"), default="real")
-    parser.add_argument("--bundle", type=Path, help="Approved frozen multimodal bundle")
+    parser.add_argument("--bundle", type=Path, help="Path to a real multimodal bundle")
+    parser.add_argument("--candidate", action="store_true", help="Run a real candidate in demo mode")
     parser.add_argument("--metadata-sha256", help="Independent metadata.json digest from AFN-049")
     args = parser.parse_args()
-    if bool(args.bundle) != bool(args.metadata_sha256) or (args.bundle and args.mode != "real"):
-        parser.error("--bundle and --metadata-sha256 must be used together in real mode")
+    if (args.candidate or args.metadata_sha256) and not args.bundle:
+        parser.error("--candidate and --metadata-sha256 require --bundle")
+    if args.bundle and args.mode != "real":
+        parser.error("--bundle requires real mode")
+    if args.bundle and not (args.candidate or args.metadata_sha256):
+        parser.error("A frozen bundle requires --metadata-sha256 from AFN-049")
     metadata = None
     if args.bundle:
         try:
-            metadata = read_frozen_metadata(args.bundle, args.metadata_sha256)
+            expected_status = "candidate" if args.candidate else "frozen"
+            metadata = read_bundle_metadata(args.bundle, args.metadata_sha256, expected_status)
         except (OSError, ValueError) as error:
             parser.exit(1, f"Bundle preflight failed: {error}\n")
 
@@ -62,10 +69,13 @@ def main() -> None:
     command = [sys.executable, "-m", "app"]
     environment = os.environ.copy()
     token = secrets.token_urlsafe(32)
+    runtime = "test" if args.mode == "mock" else "demo"
+    if metadata and not args.candidate:
+        runtime = "production"
     environment.update(
         AFN_HOST="127.0.0.1",
         AFN_PORT=str(port),
-        AFN_ENVIRONMENT="production" if metadata else ("test" if args.mode == "mock" else "demo"),
+        AFN_ENVIRONMENT=runtime,
         AFN_PREDICTOR_MODE=args.mode,
         AFN_DEMO_TOKEN=token,
         AFN_MODEL_METADATA_SHA256=args.metadata_sha256 or "",
@@ -77,6 +87,7 @@ def main() -> None:
     with TemporaryDirectory(prefix="afn-smoke-") as temporary:
         bundle = args.bundle.resolve() if args.bundle else Path(temporary) / "absent-model"
         environment["AFN_MODEL_ARTIFACT_PATH"] = str(bundle)
+        print(f"Backend smoke environment: {runtime}")
         process = subprocess.Popen(
             command, cwd=Path(__file__).resolve().parents[1],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
