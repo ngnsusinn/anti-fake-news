@@ -27,8 +27,9 @@ hoặc tiêu chí được hai bên cập nhật.
 
 ## Chạy và lưu bằng chứng
 
-1. Nhận bundle và cache CLIP theo [hướng dẫn Backend](../docs/backend-setup.md).
-   Chạy `ml.freeze verify` trên đúng hồ sơ. Đối chiếu metadata SHA-256
+1. Bundle đã qua kiểm hash và nạp bằng loader theo [audit #58](evaluation-audit.md).
+   Cần cache CLIP theo [hướng dẫn Backend](../docs/backend-setup.md) và hoàn tất
+   `ml.freeze verify` khi có đủ hai tệp Train/Val. Đối chiếu metadata SHA-256
    `6cd766a982015fb661f7eee8a5aa1317f05efc562769f8a13ba054e572fc09d5`
    và model version. Giải quyết yêu cầu trạng thái bundle `candidate`/ `frozen`
    giữa [biên bản #49](pre-test-signoff.md) và [checklist gói #54](../release/backend-checklist.md).

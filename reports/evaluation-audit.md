@@ -6,7 +6,7 @@
 | Hạng mục | Kết quả |
 | --- | --- |
 | Hash public trên snapshot | **15/15 khớp:** 13 hash tệp mã/cấu hình, hash tệp lựa chọn và canonical hash của hồ sơ trong chữ ký ML. Tính trên byte UTF-8 của đúng revision. |
-| Bản freeze | [Hồ sơ](../release/model-freeze.json) `draft`. ML đã ký canonical hash `7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8`. SHA của bundle và manifest/split Train/Val cục bộ chờ QA kiểm trực tiếp. [Biên bản #49](pre-test-signoff.md). |
+| Bản freeze | [Hồ sơ](../release/model-freeze.json) `draft`. ML đã ký canonical hash `7afd69ded04c225beb6537295555178d901383983a19b552d6e27c10aac983f8`. Ba bundle đã qua 13/13 phép so SHA-256 và nạp được bằng loader của repo. Còn thiếu manifest Train/Val và CSV split đã ẩn Test ID. [Biên bản #49](pre-test-signoff.md). |
 | Dữ liệu / nguy cơ rò rỉ | Split `ml-v2`, run `20261126T024649Z`. Audit [#29](leakage-audit.md) ghi 21 hostname publisher có mặt ở nhiều split và thiếu event ID. Ghi giới hạn này trong diễn giải Test. |
 | Test cuối | Chưa có `test-metrics.json` hoặc predictions #50 được bàn giao. Chưa có kết quả, số đếm hoặc ma trận Test có thể nghiệm thu. |
 | Công cụ audit | [`audit_test_predictions.py`](../scripts/audit_test_predictions.py) đối chiếu chữ ký, thứ tự thời gian, hash tập tin, log rerun, split và cùng ID/nhóm. Tái tính macro-F1, accuracy, metric từng lớp, ma trận và Δ của ba cấu hình từ nhãn lưu và kiểm từng điểm theo ngưỡng đã ký. |
@@ -15,6 +15,16 @@
 **7/7** trên fixture tổng hợp, gồm Δ âm, ngưỡng bằng điểm, sai hash hoặc ID
 trùng, nhãn sai, metrics lệch, thời điểm trước ký và rerun thiếu lý do.
 Công cụ chỉ mở hồ sơ và các tệp bàn giao CSV/JSON/JSONL, không nạp model.
+
+## Xác minh gói bàn giao #49
+
+Đã chạy `python -B -m ml.freeze verify --record release/model-freeze.json
+--bundle-root <bundle-root> --allow-unsigned` trên Windows với Python 3.13.17
+và bản mã LF có hash đúng hồ sơ. Kết quả exit 1, chỉ báo thiếu
+`train-validation/manifest.jsonl` và `train-validation/split.csv`.
+Đã xác nhận thêm loader trả đúng ID/version của cả ba bundle. Checkout Windows
+ban đầu có CRLF ở 14 tệp mã/cấu hình. Sau khi đối chiếu với byte LF,
+cả 14 tệp khớp hash. Kết quả xác minh bundle chưa mở cổng Test.
 
 ## Chạy audit sau bàn giao #50
 
