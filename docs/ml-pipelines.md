@@ -27,6 +27,16 @@ Loader phát hiện group xuất hiện ở nhiều split, kể cả group của
   cấp quyền, yêu cầu split `test` và truyền `allow_test=True`.
 - `ml.run_experiments` không có tùy chọn nào để mở Test và từ chối dataset có chứa Test.
   Chấm Test là lệnh riêng của #50, chỉ chạy sau khi #49 ký freeze ([working-agreement.md](working-agreement.md)).
+- `ml.evaluate_test` (#50) chạy `ml.freeze verify` trước tiên. Lệnh dừng nếu hồ sơ
+  [`release/model-freeze.json`](../release/model-freeze.json) thiếu chữ ký ML/QA, hoặc nếu
+  manifest Train/Validation, split đã ẩn ID Test, config, mã hay bundle đã đổi.
+  Sau đó lệnh đối chiếu split QA với split đã freeze (cùng
+  Train/Val, cùng số dòng và group Test) rồi mới đọc manifest Test. Lệnh không fit gì, chỉ
+  chấm qua `ModelBundle.predict`. Dùng cùng thư mục đầu ra của lần đánh giá đầu tiên. Nếu
+  đã bắt đầu chấm, lệnh từ chối đọc lại Test khi thiếu `--rerun-reason`. Mỗi lượt có kết quả
+  ghi thời gian, hash dự đoán và lý do chạy lại trong `test-metrics.json`. Nếu tiến trình bị
+  buộc dừng và còn thư mục `.test-evaluation.lock`, xác nhận tiến trình cũ đã dừng trước khi
+  gỡ khóa và ghi lý do lỗi kỹ thuật khi chạy lại.
 - Chặn fit sai tập: TF-IDF và Logistic Regression chỉ fit trên Train (`FitOnNonTrainError`).
   Có test xác nhận mọi lần `fit` đều đúng bằng số dòng Train và không bao giờ refit trên Train+Val.
 
@@ -74,6 +84,14 @@ entry hỏng sẽ bị bỏ qua và tính lại. Mặc định ở `cache/embedd
 .venv/bin/python -m ml.train_text  --manifest M.jsonl --split S.csv
 .venv/bin/python -m ml.train_image --manifest M.jsonl --split S.csv --image-root DIR --offline
 .venv/bin/python -m ml.extract_embeddings --manifest M.jsonl --split S.csv --out cache/embeddings/run.npz --offline
+
+# #50: một lượt Test cuối, chỉ sau khi #49 ký (Test-only manifest và split đầy đủ do QA giữ)
+.venv/bin/python -m ml.evaluate_test --freeze release/model-freeze.json --bundle-root backend/artifacts \
+    --locked-manifest data/private/ml-v2/train-validation/manifest.jsonl \
+    --locked-split data/private/ml-v2/train-validation/split.csv \
+    --manifest data/private/ml-v2/qa-only/manifest-test.jsonl --split data/private/ml-v2/qa-only/split.csv \
+    --image-root data --offline --out-dir reports
+# -> reports/test-predictions.jsonl, reports/test-metrics.json, reports/confusion-matrices/
 
 # Test (fixture + encoder giả; thêm AFN_CLIP_TESTS=1 để chạy cả CLIP thật đã cache)
 .venv/bin/python -m pytest -q tests/test_text_pipeline.py tests/test_image_pipeline.py tests/test_fusion.py
